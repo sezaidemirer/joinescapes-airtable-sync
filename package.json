@@ -1,0 +1,49 @@
+{
+  "name": "joinescapes",
+  "private": true,
+  "version": "2.0.0-beta",
+  "description": "Modern React tabanlı seyahat rehberi sitesi",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && npm run generate:sitemap",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "sync:airtable": "node scripts/airtable-sync.js",
+    "generate:sitemap": "node scripts/generate-sitemap.js",
+    "update:sitemap": "node scripts/auto-sitemap.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.55.0",
+    "@tailwindcss/typography": "^0.5.16",
+    "autoprefixer": "^10.4.20",
+    "axios": "^1.11.0",
+    "dompurify": "^3.2.6",
+    "dotenv": "^17.2.1",
+    "lucide-react": "^0.460.0",
+    "postcss": "^8.5.1",
+    "quill": "^2.0.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
+    "react-quill": "^2.0.0",
+    "react-router-dom": "^7.6.1",
+    "sharp": "^0.34.3",
+    "tailwindcss": "^3.4.17"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "eslint": "^9.13.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.14",
+    "globals": "^15.11.0",
+    "rollup-plugin-visualizer": "^6.0.3",
+    "terser": "^5.43.1",
+    "vite": "^6.0.1",
+    "vite-plugin-compression2": "^2.2.0"
+  }
+}

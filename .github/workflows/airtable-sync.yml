@@ -1,0 +1,38 @@
+name: Airtable to Supabase Sync
+
+on:
+  schedule:
+    # Her dakika çalıştır
+    - cron: '* * * * *'
+  workflow_dispatch: # Manuel tetikleme için
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        npm install @supabase/supabase-js axios dotenv
+        
+    - name: Run Airtable sync
+      env:
+        AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+        AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+        AIRTABLE_TABLE_NAME: ${{ secrets.AIRTABLE_TABLE_NAME }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      run: |
+        node scripts/airtable-to-supabase-sync.cjs
+        
+    - name: Log completion
+      run: |
+        echo "✅ Airtable sync completed at $(date)"
