@@ -1,0 +1,13 @@
+# ads.txt file for JoinEscapes
+# Google AdSense
+google.com, pub-9097929594228195, DIRECT, f08c47fec0942fa0
+
+# Google Ad Manager (if needed in future)
+google.com, pub-9097929594228195, DIRECT
+
+# Google AdX (if needed in future)  
+googleadservices.com, pub-9097929594228195, DIRECT
+
+# Contact information
+# Contact: admin@joinescapes.com
+# Updated: 2025-01-05 

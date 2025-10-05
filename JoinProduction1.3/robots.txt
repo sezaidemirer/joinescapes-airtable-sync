@@ -1,0 +1,36 @@
+User-agent: *
+Allow: /
+
+# Önemli sayfalar
+Allow: /
+Allow: /destinasyonlar
+Allow: /haberler
+Allow: /sanat-ve-cemiyet
+Allow: /gurme-rotalari
+Allow: /ucuz-ucus-rotalari
+Allow: /luks-seckiler
+Allow: /butik-oteller
+Allow: /oteller
+Allow: /spa-molalari
+Allow: /sehir-molalari
+Allow: /paket-tatiller
+Allow: /yaz-2025
+Allow: /hakkimizda
+Allow: /iletisim
+
+# Blog ve kategori sayfaları
+Allow: /kategori/*
+Allow: /blog/*
+
+# Admin paneli engelle
+Disallow: /admin
+Disallow: /adminlogin
+
+# Google Search Console verification
+Allow: /google123456789abcdef.html
+
+# Sitemap
+Sitemap: https://www.joinescapes.com/sitemap.xml
+
+# Crawl-delay (saniye)
+Crawl-delay: 1 

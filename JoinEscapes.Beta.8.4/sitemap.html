@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Haritası - JoinEscapes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f8f9fa; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 40px; padding: 40px 0; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header h1 { color: #2c3e50; font-size: 2.5em; margin-bottom: 10px; }
+        .header p { color: #7f8c8d; font-size: 1.1em; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 2em; font-weight: bold; color: #3498db; }
+        .stat-label { color: #7f8c8d; margin-top: 5px; }
+        .sitemap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; }
+        .section { background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .section h2 { color: #2c3e50; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #3498db; }
+        .section ul { list-style: none; }
+        .section li { margin-bottom: 8px; }
+        .section a { color: #3498db; text-decoration: none; padding: 5px 0; display: block; transition: color 0.3s; }
+        .section a:hover { color: #2980b9; text-decoration: underline; }
+        .footer { text-align: center; margin-top: 40px; padding: 20px; color: #7f8c8d; background: white; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ Site Haritası</h1>
+            <p>JoinEscapes sitesinin tüm sayfalarına buradan ulaşabilirsiniz</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Ana Sayfalar</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">8</div>
+                <div class="stat-label">Kategori Sayfaları</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">22</div>
+                <div class="stat-label">Kategori Arşivleri</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">11</div>
+                <div class="stat-label">Etiket Sayfaları</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">139</div>
+                <div class="stat-label">Blog Yazıları</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">5</div>
+                <div class="stat-label">Statik Sayfalar</div>
+            </div>
+        </div>
+        
+        <div class="sitemap-grid">
+            <div class="section">
+                <h2>📍 Ana Sayfalar</h2>
+                <ul>
+                    <li><a href="/">Ana Sayfa</a></li><li><a href="/haberler">HABERLER</a></li><li><a href="/destinasyonlar">DESTINASYONLAR</a></li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>📂 Kategori Sayfaları</h2>
+                <ul>
+                    <li><a href="/sanat-ve-cemiyet">SANAT VE-CEMIYET</a></li><li><a href="/spa-molalari">SPA MOLALARI</a></li><li><a href="/butik-oteller">BUTIK OTELLER</a></li><li><a href="/paket-tatiller">PAKET TATILLER</a></li><li><a href="/oteller">OTELLER</a></li><li><a href="/luks-seckiler">LUKS SECKILER</a></li><li><a href="/sehir-molalari">SEHIR MOLALARI</a></li><li><a href="/yaz-2025">YAZ 2025</a></li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>🗂️ Kategori Arşivleri</h2>
+                <ul>
+                    <li><a href="/kategori/destinasyon">Destinasyon</a></li><li><a href="/kategori/dogal-guzellikler">Doğal Güzellikler</a></li><li><a href="/kategori/etkinlik-ve-festivaller">Etkinlik ve Festivaller</a></li><li><a href="/kategori/gastronomi-ve-lezzet-rotalari">Gastronomi ve Lezzet Rotaları</a></li><li><a href="/kategori/havayolu-haberleri">Havayolu Haberleri</a></li><li><a href="/kategori/kampanyalar-ve-firsatlar">Kampanyalar ve Fırsatlar</a></li><li><a href="/kategori/kultur-ve-miras">Kültür ve Miras</a></li><li><a href="/kategori/lifestyle">Lifestyle</a></li><li><a href="/kategori/marina-haberleri">Marina Haberleri</a></li><li><a href="/kategori/otel-yatirimlari">Otel Yatırımları</a></li><li><a href="/kategori/roportajlar-ve-soylesiler">Röportajlar ve Söyleşiler</a></li><li><a href="/kategori/sektorel-gelismeler">Sektörel Gelişmeler</a></li><li><a href="/kategori/seyahat-rehberi">Seyahat Rehberi</a></li><li><a href="/kategori/surdurulebilir-ve-eko-turizm">Sürdürülebilir ve Eko Turizm</a></li><li><a href="/kategori/teknoloji-ve-seyahat">Teknoloji ve Seyahat</a></li><li><a href="/kategori/turizm-gundemi">Turizm Gündemi</a></li><li><a href="/kategori/tur-operatorleri">Tur Operatörleri</a></li><li><a href="/kategori/tursab">Türsab</a></li><li><a href="/kategori/vize-ve-seyahat-belgeleri">Vize ve Seyahat Belgeleri</a></li><li><a href="/kategori/yol-gunlukleri-ve-blog">Yol Günlükleri ve Blog</a></li><li><a href="/kategori/yurt-disi-haberleri">Yurt Dışı Haberleri</a></li><li><a href="/kategori/yurt-ici-haberleri">Yurt İçi Haberleri</a></li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>🏷️ Etiket Sayfaları</h2>
+                <ul>
+                    <li><a href="/etiket/main">Ana Sayfa</a></li><li><a href="/etiket/encokokunan">En Çok Okunan</a></li><li><a href="/etiket/seckinoteller">Seçkin Oteller</a></li><li><a href="/etiket/oneri">Öneri</a></li><li><a href="/etiket/ciftlericinozelrotalar">Çiftler İçin Özel Rotalar</a></li><li><a href="/etiket/cruiserotalari">Cruise Rotaları</a></li><li><a href="/etiket/ucuzucusrotalari">Ucuzcular Rotaları</a></li><li><a href="/etiket/bireyselgezginler">Bireysel Gezginler</a></li><li><a href="/etiket/vizesizrotalar">Vizesiz Rotalar</a></li><li><a href="/etiket/gurmerotalari">Gurme Rotaları</a></li><li><a href="/etiket/bunlariokudunuzmu">Bunları Okudunuz mu?</a></li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>📝 Blog Yazıları</h2>
+                <ul>
+                    <li><a href="/destinasyon/berlin-tarihin-ve-modernliin-buluma-noktas">Berlin: Tarihin ve Modernliğin Buluşma Noktası</a></li><li><a href="/destinasyon/izlanda-iftler-iin-kuzeyin-romantik-ka">İzlanda: Çiftler İçin Kuzeyin Romantik Kaçışı</a></li><li><a href="/havayolu-haberleri/istanbuldan-belgrada-tarih-ve-elencenin-bulutuu-uygun-fiyatl-rota">İstanbul’dan Belgrad’a: Tarih ve Eğlencenin Buluştuğu Uygun Fiyatlı Rota</a></li><li><a href="/destinasyon/solo-seyahat-rotalar-tek-bana-kefetmenin-zgrl">Solo Seyahat Rotaları: Tek Başına Keşfetmenin Özgürlüğü</a></li><li><a href="/destinasyon/akdeniz-cruise-rotalar-tek-seyahatte-birden-fazla-lkeyi-kefet">Akdeniz Cruise Rotaları: Tek Seyahatte Birden Fazla Ülkeyi Keşfet</a></li><li><a href="/gastronomi-ve-lezzet-rotalari/trkiye-sokak-lezzetlerinden-osmanl-saray-mutfana">Türkiye: Sokak Lezzetlerinden Osmanlı Saray Mutfağına</a></li><li><a href="/destinasyon/karada-adriyatikin-incisi-vizesiz-bir-ka">Karadağ: Adriyatik’in İncisi Vizesiz Bir Kaçış</a></li><li><a href="/destinasyon/luksun-doga-ile-bulusmasi-hanging-gardens-of-bali">Lüksün Doğa İle Buluşması: Hanging Gardens of Bali</a></li><li><a href="/destinasyon/zanzibar-hint-okyanusunda-sehir-molasi-keyfi">Zanzibar: Hint Okyanusu’nda Şehir Molası Keyfi</a></li><li><a href="/destinasyon/cin-sehir-molalari-icin-surprizlerle-dolu-bir-ulke">Çin: Şehir Molaları İçin Sürprizlerle Dolu Bir Ülke</a></li><li><a href="/vize-ve-seyahat-belgeleri/vize-almadan-once-dikkat-etmeniz-gerekenler-sorunsuz-seyahat-icin-rehber">Vize Almadan Önce Dikkat Etmeniz Gerekenler: Sorunsuz Seyahat İçin Rehber</a></li><li><a href="/gastronomi-ve-lezzet-rotalari/ispanya-gurme-rotasi-tapastan-paellaya-lezzet-dolu-bir-yolculuk">İspanya Gurme Rotası: Tapas’tan Paella’ya Lezzet Dolu Bir Yolculuk</a></li><li><a href="/yurt-disi-haberleri/yurt-disi-turizm-gundemi-turkiyeye-seyahat-edenler-icin-guncel-durum">Yurt Dışı Turizm Gündemi: Türkiye’ye Seyahat Edenler İçin Güncel Durum</a></li><li><a href="/destinasyon/bled-golu-ciftler-icin-masalsi-bir-kacamak">Bled Gölü: Çiftler İçin Masalsı Bir Kaçamak</a></li><li><a href="/destinasyon/guney-kore-solo-seyahat-rotasi-tek-basina-kesfetmenin-tadini-cikarin">Güney Kore Solo Seyahat Rotası: Tek Başına Keşfetmenin Tadını Çıkarın</a></li><li><a href="/destinasyon/kuzey-avrupa-ve-baltik-cruise-rotalari-doganin-ve-tarihin-buyulu-bulusmasi">Kuzey Avrupa ve Baltık Cruise Rotaları: Doğanın ve Tarihin Büyülü Buluşması</a></li><li><a href="/destinasyon/tayland-turkiyeden-vizesiz-seyahat-edilebilecek-egzotik-bir-cennet">Tayland: Türkiye’den Vizesiz Seyahat Edilebilecek Egzotik Bir Cennet</a></li><li><a href="/destinasyon/bukres-romanya-turkiyeden-uygun-fiyatli-ucuslarla-kesfedebileceginiz-avrupa-sehri">Bükreş, Romanya: Türkiye’den Uygun Fiyatlı Uçuşlarla Keşfedebileceğiniz Avrupa Şehri</a></li><li><a href="/destinasyon/d-maris-bay-datca-yarimadasinda-luks-ve-doga-arasinda-sakli-bir-cennet">D Maris Bay – Datça Yarımadası’nda Lüks ve Doğa Arasında Saklı Bir Cennet.</a></li><li><a href="/destinasyon/tayland-luks-her-sey-dahil-tatil-conrad-koh-samui-resort-spa-ile-tropik-cennet-deneyimi">Tayland Lüks Her Şey Dahil Tatil – Conrad Koh Samui Resort & Spa ile Tropik Cennet Deneyimi</a></li><li><a href="/destinasyon/mikonos-yunanistan-plaj-partileri-ve-altin-kumlar">Mikonos, Yunanistan – Plaj Partileri ve Altın Kumlar</a></li><li><a href="/destinasyon/the-datai-langkawi-malezya-yagmur-ormanlarinin-sifasi">The Datai Langkawi, Malezya – Yağmur Ormanlarının Şifası</a></li><li><a href="/destinasyon/caresse-a-luxury-collection-resort-spa-bodrumun-sessiz-luksu">Caresse, a Luxury Collection Resort & Spa – Bodrum’un Sessiz Lüksü</a></li><li><a href="/destinasyon/oneonly-reethi-rah-maldivlerde-sonsuz-luks-ve-izole-cennet">One&Only Reethi Rah – Maldivler’de Sonsuz Lüks ve İzole Cennet</a></li><li><a href="/kultur-ve-miras/havana-kuba-kultur-turu-karayiplerin-renkli-kalbi-">Havana, Küba Kültür Turu – Karayiplerin Renkli Kalbi </a></li><li><a href="/destinasyon/the-brando-fransiz-polinezyasi-leonardo-dicaprionun-eko-luks-cenneti">The Brando, Fransız Polinezyası – Leonardo DiCaprio’nun Eko-Lüks Cenneti</a></li><li><a href="/destinasyon/laucala-island-fiji-unlulerin-tropik-cenneti">Laucala Island, Fiji – Ünlülerin Tropik Cenneti</a></li><li><a href="/destinasyon/dubai-ultra-luks-tatil-atlantis-the-royal-ile-sehir-ve-colun-buyusu">Dubai Ultra Lüks Tatil – Atlantis The Royal ile Şehir ve Çölün Büyüsü</a></li><li><a href="/destinasyon/mykonos-tatili-cavo-tagoo-mykonos-ile-plaj-ve-gece-hayatinin-kalbinde">Mykonos Tatili – Cavo Tagoo Mykonos ile Plaj ve Gece Hayatının Kalbinde</a></li><li><a href="/destinasyon/mallorca-her-sey-dahil-tatil-iberostar-selection-llaut-palma-ile-akdeniz-luksu">Mallorca Her Şey Dahil Tatil – Iberostar Selection Llaut Palma ile Akdeniz Lüksü</a></li><li><a href="/destinasyon/aman-venice-venedik-italya-buyuk-kanal-uzerinde-zamansiz-bir-luks">Aman Venice – Venedik, İtalya: Büyük Kanal Üzerinde Zamansız Bir Lüks</a></li><li><a href="/destinasyon/the-datai-langkawi-langkawi-malezya-tropik-ormanin-kalbinde-luks-bir-kacis">The Datai Langkawi – Langkawi, Malezya: Tropik Ormanın Kalbinde Lüks Bir Kaçış</a></li><li><a href="/destinasyon/bahamalar-dunyanin-en-beyaz-kumsallari-vizesiz-cennet">Bahamalar – Dünyanın En Beyaz Kumsalları Vizesiz Cennet</a></li><li><a href="/destinasyon/zakintos-yunanistan-navagio-koyu-ve-turkuaz-sular">Zakintos, Yunanistan – Navagio Koyu ve Turkuaz Sular</a></li><li><a href="/destinasyon/phuket-tayland-egzotik-adalar-ve-tropik-plajlar">Phuket, Tayland – Egzotik Adalar ve Tropik Plajlar</a></li><li><a href="/destinasyon/kas-turkiye-akdenizin-dalis-cenneti">Kaş, Türkiye – Akdeniz’in Dalış Cenneti</a></li><li><a href="/destinasyon/sardinya-italya-akdenizin-karayipleri">Sardinya, İtalya – Akdeniz’in Karayipleri</a></li><li><a href="/destinasyon/the-bodrum-edition-egenin-modern-luksu">The Bodrum Edition – Ege’nin Modern Lüksü</a></li><li><a href="/destinasyon/hint-okyanusunda-spa-ruyasi-banyan-tree-vabbinfaru-maldivler-">Hint Okyanusu’nda Spa Rüyası  - Banyan Tree Vabbinfaru, Maldivler </a></li><li><a href="/destinasyon/anantara-al-jabal-al-akhdar-umman-orta-dogunun-en-yuksek-spa-deneyimi">Anantara Al Jabal Al Akhdar, Umman – Orta Doğu’nun En Yüksek Spa Deneyimi</a></li><li><a href="/destinasyon/amanpuri-tayland-phuketin-luks-wellness-cenneti">Amanpuri, Tayland – Phuket’in Lüks Wellness Cenneti</a></li><li><a href="/destinasyon/mandarin-oriental-bodrum-egenin-zarafet-ve-luksle-bulustugu-nokta">Mandarin Oriental, Bodrum – Ege’nin Zarafet ve Lüksle Buluştuğu Nokta</a></li><li><a href="/destinasyon/six-senses-douro-valley-portekiz-sarap-baglarinin-kalbinde-spa-keyfi">Six Senses Douro Valley, Portekiz – Şarap Bağlarının Kalbinde Spa Keyfi</a></li><li><a href="/kultur-ve-miras/buenos-aires-arjantin-tango-ve-tutkunun-sehri">Buenos Aires, Arjantin – Tango ve Tutkunun Şehri</a></li><li><a href="/destinasyon/aman-venice-venedikin-sessiz-ve-zamansiz-luksu">Aman Venice – Venedik’in Sessiz ve Zamansız Lüksü</a></li><li><a href="/kultur-ve-miras/cape-town-guney-afrika-iki-okyanusun-bulusma-noktasi">Cape Town, Güney Afrika – İki Okyanusun Buluşma Noktası</a></li><li><a href="/destinasyon/necker-island-unlulerin-karayiplerdeki-en-ozel-sahnesi">Necker Island – Ünlülerin Karayipler’deki En Özel Sahnesi</a></li><li><a href="/destinasyon/mustique-st-vincent-grenadines-kraliyet-ve-rock-yildizlarinin-gizli-adasi">Mustique, St. Vincent & Grenadines – Kraliyet ve Rock Yıldızlarının Gizli Adası</a></li><li><a href="/destinasyon/jos-ignacio-uruguay-guney-amerikanin-gizli-luks-sahil-kasabasi">José Ignacio, Uruguay – Güney Amerika’nın Gizli Lüks Sahil Kasabası</a></li><li><a href="/destinasyon/barbados-her-sey-dahil-tatil-sandals-royal-barbados-ile-karayip-ruyasi">Barbados Her Şey Dahil Tatil – Sandals Royal Barbados ile Karayip Rüyası</a></li>
+                    <li><em>... ve 89 yazı daha</em></li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>📄 Statik Sayfalar</h2>
+                <ul>
+                    <li><a href="/hakkimizda">HAKKIMIZDA</a></li><li><a href="/iletisim">ILETISIM</a></li><li><a href="/gizlilik-politikasi">GIZLILIK POLITIKASI</a></li><li><a href="/cerez-politikasi">CEREZ POLITIKASI</a></li><li><a href="/kullanim-sartlari">KULLANIM SARTLARI</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Son güncelleme: 28 Eylül 2025</p>
+            <p>Toplam 188 sayfa</p>
+        </div>
+    </div>
+</body>
+</html>

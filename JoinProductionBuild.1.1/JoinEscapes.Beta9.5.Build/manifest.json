@@ -1,0 +1,39 @@
+{
+  "name": "JoinEscapes - Destinasyon Rehberi",
+  "short_name": "JoinEscapes",
+  "description": "Destinasyon haberleri ve seyahat rehberi platformu",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "categories": ["travel", "lifestyle", "news"],
+  "lang": "tr",
+  "icons": [
+    {
+      "src": "/images/join_icon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/join_icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/join_icon.jpg",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/jpeg"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/join_icon.jpg",
+      "type": "image/jpeg",
+      "sizes": "1280x720",
+      "form_factor": "wide"
+    }
+  ]
+} 

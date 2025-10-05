@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Haritası - JoinEscapes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f8f9fa; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 40px; padding: 40px 0; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header h1 { color: #2c3e50; font-size: 2.5em; margin-bottom: 10px; }
+        .header p { color: #7f8c8d; font-size: 1.1em; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 2em; font-weight: bold; color: #3498db; }
+        .stat-label { color: #7f8c8d; margin-top: 5px; }
+        .sitemap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; }
+        .section { background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .section h2 { color: #2c3e50; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #3498db; }
+        .section ul { list-style: none; }
+        .section li { margin-bottom: 8px; }
+        .section a { color: #3498db; text-decoration: none; padding: 5px 0; display: block; transition: color 0.3s; }
+        .section a:hover { color: #2980b9; text-decoration: underline; }
+        .footer { text-align: center; margin-top: 40px; padding: 20px; color: #7f8c8d; background: white; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ Site Haritası</h1>
+            <p>JoinEscapes sitesinin tüm sayfalarına buradan ulaşabilirsiniz</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Ana Sayfalar</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">8</div>
+                <div class="stat-label">Kategori Sayfaları</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">21</div>
+                <div class="stat-label">Kategori Arşivleri</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">11</div>
+                <div class="stat-label">Etiket Sayfaları</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">39</div>
+                <div class="stat-label">Blog Yazıları</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">5</div>
+                <div class="stat-label">Statik Sayfalar</div>
+            </div>
+        </div>
+        
+        <div class="sitemap-grid">
+            <div class="section">
+                <h2>📍 Ana Sayfalar</h2>
+                <ul>
+                    <li><a href="/">Ana Sayfa</a></li><li><a href="/haberler">HABERLER</a></li><li><a href="/destinations">DESTINATIONS</a></li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>📂 Kategori Sayfaları</h2>
+                <ul>
+                    <li><a href="/celebrity">CELEBRITY</a></li><li><a href="/spa-molalari">SPA MOLALARI</a></li><li><a href="/butik-oteller">BUTIK OTELLER</a></li><li><a href="/paket-tatiller">PAKET TATILLER</a></li><li><a href="/oteller">OTELLER</a></li><li><a href="/luks-seckiler">LUKS SECKILER</a></li><li><a href="/sehir-molalari">SEHIR MOLALARI</a></li><li><a href="/yaz-2025">YAZ 2025</a></li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>🗂️ Kategori Arşivleri</h2>
+                <ul>
+                    <li><a href="/kategori/destinasyon">Destinasyon</a></li><li><a href="/kategori/dogal-guzellikler">Doğal Güzellikler</a></li><li><a href="/kategori/etkinlik-ve-festivaller">Etkinlik ve Festivaller</a></li><li><a href="/kategori/gastronomi-ve-lezzet-rotalari">Gastronomi ve Lezzet Rotaları</a></li><li><a href="/kategori/havayolu-haberleri">Havayolu Haberleri</a></li><li><a href="/kategori/kampanyalar-ve-firsatlar">Kampanyalar ve Fırsatlar</a></li><li><a href="/kategori/kultur-ve-miras">Kültür ve Miras</a></li><li><a href="/kategori/marina-haberleri">Marina Haberleri</a></li><li><a href="/kategori/otel-yatirimlari">Otel Yatırımları</a></li><li><a href="/kategori/roportajlar-ve-soylesiler">Röportajlar ve Söyleşiler</a></li><li><a href="/kategori/sektorel-gelismeler">Sektörel Gelişmeler</a></li><li><a href="/kategori/seyahat-rehberi">Seyahat Rehberi</a></li><li><a href="/kategori/surdurulebilir-ve-eko-turizm">Sürdürülebilir ve Eko Turizm</a></li><li><a href="/kategori/teknoloji-ve-seyahat">Teknoloji ve Seyahat</a></li><li><a href="/kategori/turizm-gundemi">Turizm Gündemi</a></li><li><a href="/kategori/tur-operatorleri">Tur Operatörleri</a></li><li><a href="/kategori/tursab">Türsab</a></li><li><a href="/kategori/vize-ve-seyahat-belgeleri">Vize ve Seyahat Belgeleri</a></li><li><a href="/kategori/yol-gunlukleri-ve-blog">Yol Günlükleri ve Blog</a></li><li><a href="/kategori/yurt-disi-haberleri">Yurt Dışı Haberleri</a></li><li><a href="/kategori/yurt-ici-haberleri">Yurt İçi Haberleri</a></li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>🏷️ Etiket Sayfaları</h2>
+                <ul>
+                    <li><a href="/etiket/main">Ana Sayfa</a></li><li><a href="/etiket/encokokunan">En Çok Okunan</a></li><li><a href="/etiket/seckinoteller">Seçkin Oteller</a></li><li><a href="/etiket/oneri">Öneri</a></li><li><a href="/etiket/vizesizrotalar">Vizesiz Rotalar</a></li><li><a href="/etiket/ucuzucusrotalari">Ucuzcular Rotaları</a></li><li><a href="/etiket/bunlariokudunuzmu">Bunları Okudunuz mu?</a></li><li><a href="/etiket/ciftlericinozelrotalar">Çiftler İçin Özel Rotalar</a></li><li><a href="/etiket/bireyselgezginler">Bireysel Gezginler</a></li><li><a href="/etiket/cruiserotalari">Cruise Rotaları</a></li><li><a href="/etiket/gurmerotalari">Gurme Rotaları</a></li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>📝 Blog Yazıları</h2>
+                <ul>
+                    <li><a href="/destinasyon/the-ritz-paris-zarafetin-ve-tarihin-kesistigi-efsanevi-konaklama-deneyimi">The Ritz Paris: Zarafetin ve Tarihin Kesiştiği Efsanevi Konaklama Deneyimi</a></li><li><a href="/destinasyon/fogo-island-inn-newfoundland-kanada">Fogo Island Inn – Newfoundland, Kanada</a></li><li><a href="/destinasyon/karadag-avrupanin-sakli-cenneti">Karadağ: Avrupa’nın Saklı Cenneti</a></li><li><a href="/destinasyon/hurghada-kizildenizin-altin-kiyisinda-egzotik-bir-yaz-ruyasi">Hurghada: Kızıldeniz’in Altın Kıyısında Egzotik Bir Yaz Rüyası</a></li><li><a href="/destinasyon/aman-tokyo-minimalizmin-ve-luksun-kusursuz-bulusmasi">Aman Tokyo: Minimalizmin ve Lüksün Kusursuz Buluşması</a></li><li><a href="/seyahat-rehberi/luksun-tanimi-burj-al-arab-deneyimi">Lüksün Tanımı: Burj Al Arab Deneyimi</a></li><li><a href="/destinasyon/yunanistan-tatili-2025-ada-ruyalariyla-bezenmis-tarihi-ve-mavi-yolculuk">Yunanistan Tatili 2025: Ada Rüyalarıyla Bezenmiş Tarihi ve Mavi Yolculuk</a></li><li><a href="/destinasyon/orta-dogunun-zarif-cazibesi-bahreyni-kesfedin">Orta Doğu’nun Zarif Cazibesi: Bahreyn’i Keşfedin</a></li><li><a href="/destinasyon/maldivlerde-masal-gibi-bir-kacis-saii-lagoon-maldives">Maldivler’de Masal Gibi Bir Kaçış: SAii Lagoon Maldives</a></li><li><a href="/destinasyon/kizildenizde-her-sey-dahil-ruya-rixos-premium-seagate-sarm-el-seyh">Kızıldeniz’de Her Şey Dahil Rüya: Rixos Premium Seagate, Şarm El-Şeyh</a></li><li><a href="/destinasyon/dominikte-luksun-yeni-tanimi-the-grand-reserve-at-paradisus-palma-real">Dominik’te Lüksün Yeni Tanımı: The Grand Reserve at Paradisus Palma Real</a></li><li><a href="/destinasyon/burj-khalifada-luksun-zirvesi-dubaide-efsanevi-bir-konaklama-deneyimi">Burj Khalifa'da Lüksün Zirvesi: Dubai’de Efsanevi Bir Konaklama Deneyimi</a></li><li><a href="/destinasyon/barcelona-renklerin-ritmin-ve-ruhun-sehri">Barcelona: Renklerin, Ritmin ve Ruhun Şehri</a></li><li><a href="/destinasyon/hotel-san-cristbal-baja-california-meksika">Hotel San Cristóbal – Baja California, Meksika</a></li><li><a href="/destinasyon/fas-renklerin-baharatlarin-ve-zamanin-otesinde-bir-yolculuk">Fas: Renklerin, Baharatların ve Zamanın Ötesinde Bir Yolculuk</a></li><li><a href="/seyahat-rehberi/butik-zevklere-canaves-oia-suites-santorini-yunanistan">Butik Zevklere: Canaves Oia Suites – Santorini, Yunanistan</a></li><li><a href="/kultur-ve-miras/italyayi-kesfet-ronesanstan-romaya-askin-ve-sanatin-ulkesi">İtalya’yı Keşfet: Rönesans’tan Roma’ya, Aşkın ve Sanatın Ülkesi</a></li><li><a href="/destinasyon/katarda-luksun-yeni-adresi-rixos-gulf-hotel-doha">Katar’da Lüksün Yeni Adresi: Rixos Gulf Hotel Doha</a></li><li><a href="/destinasyon/ananda-in-the-himalayas-hindistanda-spirituel-bir-luks">Ananda in the Himalayas – Hindistan’da Spiritüel Bir Lüks</a></li><li><a href="/seyahat-rehberi/sha-wellness-clinic-ispanyanin-kalbinde-sifa-yolculugu">SHA Wellness Clinic – İspanya'nın Kalbinde Şifa Yolculuğu</a></li><li><a href="/destinasyon/kylie-jenner-2025-yazinda-santorinide-tatilde">Kylie Jenner 2025 Yazında Santorini’de Tatilde!</a></li><li><a href="/seyahat-rehberi/sharm-el-sheikh-unlulerin-gozdesi-tatil-cenneti">Sharm El Sheikh: Ünlülerin Gözdesi, Tatil Cenneti</a></li><li><a href="/seyahat-rehberi/maldivlerde-unlu-tatili-2025de-maldivlerde-kimler-konakladi">Maldivler’de Ünlü Tatili: 2025’de Maldivler'de Kimler Konakladı?</a></li><li><a href="/destinasyon/2025te-dunya-unlulerinin-tercih-ettigi-en-populer-tatil-rotalari">2025’te Dünya Ünlülerinin Tercih Ettiği En Popüler Tatil Rotaları</a></li><li><a href="/destinasyon/ruhunu-ve-bedenini-dinlendirmek-icin-spa-tatili-molasi">Ruhunu ve Bedenini Dinlendirmek İçin: Spa Tatili Molası</a></li><li><a href="/turizm-gundemi/turkiye-turizminde-ulke-yangin-yeri">Türkiye Turizminde Ülke Yangın Yeri!</a></li><li><a href="/sektorel-gelismeler/iran-israil-gerilimi-turizmi-derinden-sarsiyor-join-escapeden-kritik-degerlendirme">İran-İsrail Gerilimi Turizmi Derinden Sarsıyor: Join Escape’den Kritik Değerlendirme</a></li><li><a href="/seyahat-rehberi/yola-hafif-cik-agir-anilar-tasi-solo-seyahat-icin-sirt-cantasi-hazirlama-rehberi">Yola Hafif Çık, Ağır Anılar Taşı: Solo Seyahat İçin Sırt Çantası Hazırlama Rehberi</a></li><li><a href="/seyahat-rehberi/join-escape-siradan-seyahat-yazilarinin-otesinde-gercek-yolculuk-deneyimi">Join Escape: Sıradan Seyahat Yazılarının Ötesinde Gerçek Yolculuk Deneyimi</a></li><li><a href="/surdurulebilir-ve-eko-turizm/ispanya-gezi-rehberi-tarih-kultur-ve-doganin-muhtesem-uyumu">İspanya Gezi Rehberi | Tarih, Kültür ve Doğanın Muhteşem Uyumu</a></li><li><a href="/destinasyon/dubai-gezi-rehberi-colun-icindeki-modern-mucize-ve-kulturel-harmoni">Dubai Gezi Rehberi | Çölün İçindeki Modern Mucize ve Kültürel Harmoni</a></li><li><a href="/dogal-guzellikler/japonya-gezi-rehberi-tarih-teknoloji-ve-doganin-muhtesem-bulusmasi">Japonya Gezi Rehberi | Tarih, Teknoloji ve Doğanın Muhteşem Buluşması</a></li><li><a href="/roportajlar-ve-soylesiler/karadag-gezi-rehberi-tarih-doga-ve-kulturun-bulustugu-balkanlarin-incisi">Karadağ Gezi Rehberi | Tarih, Doğa ve Kültürün Buluştuğu Balkanlar’ın İncisi</a></li><li><a href="/roportajlar-ve-soylesiler/meksika-gezi-rehberi-tarih-kultur-ve-doganin-buyuleyici-harmani">Meksika Gezi Rehberi | Tarih, Kültür ve Doğanın Büyüleyici Harmanı</a></li><li><a href="/destinasyon/bahreyn-gezi-rehberi-korfezin-zarif-adasi-ve-tarih-mirasi">Bahreyn Gezi Rehberi | Körfez’in Zarif Adası ve Tarih Mirası</a></li><li><a href="/destinasyon/sharm-el-sheikh-tatil-rehberi-kizildenizin-en-ozel-dalis-ve-tatil-merkezi">Sharm El Sheikh Tatil Rehberi | Kızıldeniz’in En Özel Dalış ve Tatil Merkezi</a></li><li><a href="/dogal-guzellikler/katar-gezi-rehberi-modernlik-kultur-ve-korfezin-parlayan-yildizi">Katar Gezi Rehberi | Modernlik, Kültür ve Körfez’in Parlayan Yıldızı</a></li><li><a href="/destinasyon/urdun-gezi-rehberi-tarih-doga-ve-kutsal-topraklarin-buyusu">Ürdün Gezi Rehberi | Tarih, Doğa ve Kutsal Toprakların Büyüsü</a></li><li><a href="/etkinlik-ve-festivaller/fas-gezi-rehberi-tarih-kultur-ve-sahra-coluyle-buyuleyen-kuzey-afrika-ulkesi">Fas Gezi Rehberi | Tarih, Kültür ve Sahra Çölüyle Büyüleyen Kuzey Afrika Ülkesi</a></li>
+                    
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>📄 Statik Sayfalar</h2>
+                <ul>
+                    <li><a href="/about">ABOUT</a></li><li><a href="/contact">CONTACT</a></li><li><a href="/gizlilik-politikasi">GIZLILIK POLITIKASI</a></li><li><a href="/cerez-politikasi">CEREZ POLITIKASI</a></li><li><a href="/kullanim-sartlari">KULLANIM SARTLARI</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Son güncelleme: 8 Temmuz 2025</p>
+            <p>Toplam 87 sayfa</p>
+        </div>
+    </div>
+</body>
+</html>

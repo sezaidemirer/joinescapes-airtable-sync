@@ -1,0 +1,21 @@
+<!-- Google Ads Conversion Tracking -->
+<!-- Bu dosya Google Ads conversion tracking için kullanılır -->
+<!-- Gerçek conversion ID'nizi buraya ekleyin -->
+
+<!-- Global site tag (gtag.js) - Google Ads -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-CONVERSION_ID"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-CONVERSION_ID');
+</script>
+
+<!-- Conversion tracking snippet -->
+<script>
+  gtag('event', 'conversion', {
+    'send_to': 'AW-CONVERSION_ID/CONVERSION_LABEL',
+    'value': 1.0,
+    'currency': 'TRY'
+  });
+</script> 
