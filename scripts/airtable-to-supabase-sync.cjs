@@ -3,7 +3,15 @@
 // Airtable'dan Supabase'e otomatik senkronizasyon
 // Bu script Vercel Cron Job tarafından her 5 dakikada bir çalıştırılır
 
-require('dotenv').config(); // .env dosyasını yükle
+// Yerel geliştirmede .env yükle; GitHub Actions/Vercel gibi ortamlarda gerekmez
+try {
+  if (!process.env.GITHUB_ACTIONS) {
+    // eslint-disable-next-line global-require
+    require('dotenv').config();
+  }
+} catch (_) {
+  // dotenv yoksa sessizce devam et (CI ortamı)
+}
 
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
@@ -22,7 +30,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Airtable konfigürasyonu
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appZdTkkdji3EGDx8';
-const AIRTABLE_TABLE_ID = process.env.AIRTABLE_TABLE_NAME || 'tblTcxVudBbXo2Svd';
+// Support both AIRTABLE_TABLE_ID and AIRTABLE_TABLE_NAME envs (some setups use name, others id)
+const AIRTABLE_TABLE_ID = process.env.AIRTABLE_TABLE_ID || process.env.AIRTABLE_TABLE_NAME || 'tblTcxVudBbXo2Svd';
 
 if (!AIRTABLE_API_KEY) {
   console.error('❌ Airtable API Key eksik. Lütfen .env dosyasını kontrol edin.');
@@ -35,6 +44,91 @@ const STATUS_MAPPING = {
   'In progress': 'pending',
   'Todo': 'draft'
 };
+
+// Tag yardımcıları
+async function upsertTagsByNames(tagNames) {
+  if (!Array.isArray(tagNames) || tagNames.length === 0) return [];
+  const uniqueNames = Array.from(new Set(tagNames.map((n) => String(n).trim()).filter(Boolean)));
+  if (uniqueNames.length === 0) return [];
+
+  // 1) Var olanları çek
+  const { data: existing, error: selErr } = await supabase
+    .from('tags')
+    .select('id, name')
+    .in('name', uniqueNames);
+  if (selErr) {
+    console.error('❌ Tag select hatası:', selErr.message);
+    return [];
+  }
+  const existingNames = new Set((existing || []).map((t) => t.name));
+  const missing = uniqueNames.filter((n) => !existingNames.has(n));
+
+                  // 2) Eksikleri ekle
+                  if (missing.length > 0) {
+                    const { error: insErr } = await supabase
+                      .from('tags')
+                      .insert(missing.map((name) => ({ 
+                        name, 
+                        slug: generateSlug(name) 
+                      })));
+                    if (insErr) {
+                      console.error('❌ Tag insert hatası:', insErr.message);
+                    }
+                  }
+
+  // 3) Hepsini tekrar çek
+  const { data: all, error: finalSelErr } = await supabase
+    .from('tags')
+    .select('id, name')
+    .in('name', uniqueNames);
+  if (finalSelErr) {
+    console.error('❌ Tag final select hatası:', finalSelErr.message);
+    return existing || [];
+  }
+  return all || existing || [];
+}
+
+async function linkTagsToPost(postId, tagIds) {
+  if (!postId || !Array.isArray(tagIds) || tagIds.length === 0) return;
+  const uniqueIds = Array.from(new Set(tagIds));
+  const rows = uniqueIds.map((tagId) => ({ post_id: postId, tag_id: tagId }));
+  const { error } = await supabase
+    .from('post_tags')
+    .upsert(rows, { onConflict: 'post_id,tag_id' });
+  if (error) {
+    console.error('❌ post_tags upsert hatası:', error.message);
+  }
+}
+
+// Category yardımcıları
+async function getOrCreateCategoryIdByName(categoryName) {
+  if (!categoryName) return null;
+  const name = String(categoryName).trim();
+  if (!name) return null;
+  const slug = generateSlug(name);
+  // Önce slug ile var mı bak
+  const { data: existing, error: selErr } = await supabase
+    .from('categories')
+    .select('id, name, slug')
+    .eq('slug', slug)
+    .maybeSingle();
+  if (selErr) {
+    console.error('❌ Kategori select hatası:', selErr.message);
+  }
+  if (existing?.id) return existing.id;
+
+  // Yoksa ekle
+  const { data: inserted, error: insErr } = await supabase
+    .from('categories')
+    .insert([{ name, slug }])
+    .select('id')
+    .single();
+  if (insErr) {
+    console.error('❌ Kategori insert hatası:', insErr.message);
+    return null;
+  }
+  return inserted?.id || null;
+}
 
 // Slug oluşturma fonksiyonu
 function generateSlug(title) {
@@ -89,20 +183,50 @@ async function getJoinPRUserId() {
 
 // Airtable'dan veri çek
 async function fetchAirtableRecords() {
+  // Handle pagination to fetch all records safely; include light retry/backoff
+  const allRecords = [];
+  let offset = undefined;
+  let attempt = 0;
+  const maxAttempts = 3;
+
   try {
-    const response = await axios.get(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json'
+    do {
+      const params = offset ? { offset } : undefined;
+      const response = await axios.get(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+            'User-Agent': 'joinescapes-airtable-sync/1.0'
+          },
+          params
         }
+      );
+
+      if (response.status !== 200) {
+        throw new Error(`Airtable HTTP ${response.status}`);
       }
-    );
-    
-    return response.data.records;
+
+      const { records, offset: nextOffset } = response.data || {};
+      if (Array.isArray(records)) {
+        allRecords.push(...records);
+      }
+      offset = nextOffset;
+      // brief delay to respect Airtable API rate limits
+      await new Promise((r) => setTimeout(r, 200));
+    } while (offset);
+
+    return allRecords;
   } catch (error) {
+    attempt += 1;
     console.error('❌ Airtable veri çekme hatası:', error.message);
+    if (attempt < maxAttempts) {
+      const backoffMs = 500 * attempt;
+      console.log(`⏳ Tekrar denenecek (${attempt}/${maxAttempts}) ${backoffMs}ms sonra...`);
+      await new Promise((r) => setTimeout(r, backoffMs));
+      return fetchAirtableRecords();
+    }
     return [];
   }
 }
@@ -155,6 +279,15 @@ async function syncAirtableToSupabase() {
       ? fields.Attachments[0].url 
       : null;
     
+    // Airtable Tags alanını diziye çevir
+    const tagNames = Array.isArray(fields.Tags)
+      ? fields.Tags.map((t) => (typeof t === 'string' ? t : (t && t.name) ? t.name : null)).filter(Boolean)
+      : [];
+
+    // Kategoriyi sabit Destinasyon (id=7) yap
+    const categoryId = 7;
+    console.log('📂 Kategori sabit: Destinasyon → id:', categoryId);
+
     const postData = {
       title: fields.Name,
       slug: generateSlug(fields.Name),
@@ -163,51 +296,56 @@ async function syncAirtableToSupabase() {
       author_name: 'Join PR',
       author_id: joinPRUserId, // Join PR kullanıcısının ID'si
       airtable_record_id: record.id,
-      category_id: null, // Kategori yok (şimdilik)
+      category_id: categoryId,
       status: STATUS_MAPPING[fields.Status] || 'published',
       read_time: calculateReadTime(fields.Notes || ''),
       meta_title: fields.Name,
       meta_description: fields.Notes ? fields.Notes.substring(0, 160) : '',
-      tags: [], // Boş etiket array'i
+      // UI için isimleri text[] alanında da tutalım (ayrıca N-N ilişki kuracağız)
+      tags: tagNames,
       featured_image_url: featuredImageUrl, // Airtable'dan gelen görsel
       published_at: new Date().toISOString() // Done yazıları yayınlanmış
     };
     
-    if (existingPost) {
-      // Mevcut post'u güncelle
-      console.log(`   📝 ${fields.Name} güncelleniyor...`);
-      
-      const { error } = await supabase
-        .from('posts')
-        .update({
-          ...postData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingPost.id);
-      
-      if (error) {
-        console.error(`   ❌ Güncelleme hatası: ${error.message}`);
-        skippedCount++;
-      } else {
-        console.log(`   ✅ Güncellendi: ${fields.Name}`);
-        updatedCount++;
-      }
+                    // Upsert to minimize round-trips and avoid duplicates
+                    const { error } = await supabase
+                      .from('posts')
+                      .upsert(
+                        existingPost ? { ...postData, id: existingPost.id, updated_at: new Date().toISOString() } : postData,
+                        { onConflict: 'slug' }
+                      );
+
+    if (error) {
+      console.error(`   ❌ Kaydetme hatası: ${error.message}`);
+      skippedCount++;
+    } else if (existingPost) {
+      console.log(`   ✅ Güncellendi: ${fields.Name}`);
+      updatedCount++;
     } else {
-      // Yeni post ekle
-      console.log(`   ➕ ${fields.Name} ekleniyor...`);
-      
-      const { error } = await supabase
-        .from('posts')
-        .insert(postData);
-      
-      if (error) {
-        console.error(`   ❌ Ekleme hatası: ${error.message}`);
-        skippedCount++;
-      } else {
-        console.log(`   ✅ Eklendi: ${fields.Name}`);
-        addedCount++;
-      }
+      console.log(`   ✅ Eklendi: ${fields.Name}`);
+      addedCount++;
     }
+
+    // Post ID'yi garantile (existingPost yoksa yeniden çek)
+    let postId = existingPost && existingPost.id;
+    if (!postId) {
+      const { data: fetched } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('airtable_record_id', record.id)
+        .single();
+      postId = fetched && fetched.id;
+    }
+
+    // Tags'i N-N ilişkiye yansıt
+    if (postId && tagNames.length > 0) {
+      const tagsRows = await upsertTagsByNames(tagNames);
+      const tagIds = (tagsRows || []).map((t) => t.id).filter(Boolean);
+      await linkTagsToPost(postId, tagIds);
+    }
+
+    // small delay to distribute write load
+    await new Promise((r) => setTimeout(r, 100));
   }
   
   console.log(`🎉 Senkronizasyon tamamlandı!`);
