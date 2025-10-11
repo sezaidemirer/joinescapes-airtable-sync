@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: Airtable to Supabase Sync
 
 on:
@@ -34,6 +35,7 @@ jobs:
           VITE_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+          # GitHub Secrets'ta tanımlı
           AIRTABLE_TABLE_ID: ${{ secrets.AIRTABLE_TABLE_ID }}
         run: |
           export NODE_OPTIONS="--unhandled-rejections=strict"
