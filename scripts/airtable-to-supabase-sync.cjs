@@ -339,6 +339,12 @@ async function syncAirtableToSupabase() {
       published_at: new Date().toISOString() // Done yazıları yayınlanmış
     };
     
+    // Debug: postData'yı göster
+    console.log(`   🔍 postData.category_id: ${postData.category_id}`);
+    if (existingPost) {
+      console.log(`   🔍 Mevcut post var (id: ${existingPost.id}), güncelleniyor...`);
+    }
+    
                     // Upsert to minimize round-trips and avoid duplicates
                     const { error } = await supabase
                       .from('posts')
