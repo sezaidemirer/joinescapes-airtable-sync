@@ -286,17 +286,23 @@ async function syncAirtableToSupabase() {
 
     // Airtable'dan kategori bilgisini al ve Supabase ID'sine çevir
     const airtableCategory = fields.Category;
+    
+    // Debug: Kategori adını göster
+    console.log(`🔍 Airtable'dan gelen kategori: "${airtableCategory}"`);
+    
     const categoryMapping = {
-      'Kampanyalar ve Fırsatlar': 24,
-      'Yurt İçi Haberleri': 13, // Airtable'daki tam isim
-      'Yurt Dışı Haberleri': 12,
-      'Vize ve Seyahat Belgeleri': 16,
-      'Havayolu Haberleri': 9, // Havayolu Haberleri ID'si
-      'Destinasyon': 7 // Varsayılan olarak Destinasyon
+      'kampanyalar ve fırsatlar': 24,
+      'yurt içi haberleri': 13,
+      'yurt dışı haberleri': 12,
+      'vize ve seyahat belgeleri': 16,
+      'havayolu haberleri': 9,
+      'destinasyon': 7
     };
     
-    const categoryId = categoryMapping[airtableCategory] || 7; // Varsayılan: Destinasyon
-    console.log(`📂 Kategori: ${airtableCategory} → id: ${categoryId}`);
+    // Case insensitive mapping - küçük harfe çevir
+    const normalizedCategory = airtableCategory ? airtableCategory.toLowerCase().trim() : '';
+    const categoryId = categoryMapping[normalizedCategory] || 7; // Varsayılan: Destinasyon
+    console.log(`📂 Kategori: ${airtableCategory} → normalized: "${normalizedCategory}" → id: ${categoryId}`);
 
     const postData = {
       title: fields.Name,
