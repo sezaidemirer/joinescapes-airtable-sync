@@ -291,16 +291,32 @@ async function syncAirtableToSupabase() {
     console.log(`🔍 Airtable'dan gelen kategori: "${airtableCategory}"`);
     
     const categoryMapping = {
-      'kampanyalar ve fırsatlar': 24,
-      'yurt içi haberleri': 13,
-      'yurt dışı haberleri': 12,
+      'kampanyalar ve firsatlar': 24,
+      'yurt ici haberleri': 13,
+      'yurt disi haberleri': 12,
       'vize ve seyahat belgeleri': 16,
       'havayolu haberleri': 9,
       'destinasyon': 7
     };
     
-    // Case insensitive mapping - küçük harfe çevir
-    const normalizedCategory = airtableCategory ? airtableCategory.toLowerCase().trim() : '';
+    // Türkçe karakterleri İngilizce'ye çevir ve küçük harfe çevir
+    const normalizedCategory = airtableCategory 
+      ? airtableCategory
+          .toLowerCase()
+          .replace(/ı/g, 'i')
+          .replace(/ğ/g, 'g')
+          .replace(/ü/g, 'u')
+          .replace(/ş/g, 's')
+          .replace(/ö/g, 'o')
+          .replace(/ç/g, 'c')
+          .replace(/İ/g, 'i')
+          .replace(/Ğ/g, 'g')
+          .replace(/Ü/g, 'u')
+          .replace(/Ş/g, 's')
+          .replace(/Ö/g, 'o')
+          .replace(/Ç/g, 'c')
+          .trim()
+      : '';
     const categoryId = categoryMapping[normalizedCategory] || 7; // Varsayılan: Destinasyon
     console.log(`📂 Kategori: ${airtableCategory} → normalized: "${normalizedCategory}" → id: ${categoryId}`);
 
