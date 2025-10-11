@@ -1,9 +1,10 @@
 {
   "crons": [
-    {
-      "path": "/api/cron-sync",
-      "schedule": "0 */5 * * *"
-    }
+    // Vercel Cron Job - Tamamen devre dışı (GitHub Actions kullanılıyor)
+    // {
+    //   "path": "/api/cron-sync",
+    //   "schedule": "0 */5 * * *"
+    // }
   ],
   "functions": {
     "api/cron-sync.js": {
