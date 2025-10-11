@@ -1,9 +1,9 @@
 name: Airtable to Supabase Sync
 
 on:
-  # schedule:
-  #   - cron: '*/5 * * * *' # her 5 dakikada bir - GEÇİCİ OLARAK KAPALI
-  workflow_dispatch: {} # Sadece manuel çalıştırma
+  schedule:
+    - cron: '*/5 * * * *' # her 5 dakikada bir
+  workflow_dispatch: {} # Manuel çalıştırma da aktif
 
 concurrency:
   group: airtable-sync

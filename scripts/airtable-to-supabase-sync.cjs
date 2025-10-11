@@ -346,22 +346,48 @@ async function syncAirtableToSupabase() {
     }
     
                     // Upsert to minimize round-trips and avoid duplicates
-                    const { error } = await supabase
+                    const { error, data: upsertedData } = await supabase
                       .from('posts')
                       .upsert(
                         existingPost ? { ...postData, id: existingPost.id, updated_at: new Date().toISOString() } : postData,
                         { onConflict: 'slug' }
-                      );
+                      )
+                      .select('id, category_id');
 
     if (error) {
       console.error(`   ❌ Kaydetme hatası: ${error.message}`);
       skippedCount++;
-    } else if (existingPost) {
-      console.log(`   ✅ Güncellendi: ${fields.Name}`);
-      updatedCount++;
     } else {
-      console.log(`   ✅ Eklendi: ${fields.Name}`);
-      addedCount++;
+      if (existingPost) {
+        console.log(`   ✅ Güncellendi: ${fields.Name}`);
+        updatedCount++;
+      } else {
+        console.log(`   ✅ Eklendi: ${fields.Name}`);
+        addedCount++;
+      }
+      
+      // DEBUG: UPSERT sonrası category_id'yi kontrol et
+      if (upsertedData && upsertedData[0]) {
+        console.log(`   🔍 UPSERT sonrası category_id: ${upsertedData[0].category_id} (Beklenen: ${categoryId})`);
+        if (upsertedData[0].category_id !== categoryId) {
+          console.error(`   ⚠️ UYARI: category_id değişti! ${categoryId} → ${upsertedData[0].category_id}`);
+        }
+        
+        // 2 saniye bekle ve tekrar kontrol et
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const { data: recheck } = await supabase
+          .from('posts')
+          .select('id, category_id')
+          .eq('id', upsertedData[0].id)
+          .single();
+        
+        if (recheck) {
+          console.log(`   🔍 2 saniye sonra category_id: ${recheck.category_id}`);
+          if (recheck.category_id !== categoryId) {
+            console.error(`   ⚠️⚠️⚠️ KRİTİK: category_id 2 saniye sonra değişti! ${categoryId} → ${recheck.category_id}`);
+          }
+        }
+      }
     }
 
     // Post ID'yi garantile (existingPost yoksa yeniden çek)
