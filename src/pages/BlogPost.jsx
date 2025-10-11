@@ -545,8 +545,17 @@ const BlogPost = () => {
           })
         }
         
-        // Son 7 yazıyı al (en yeni tarihli)
-        const formattedSidebar = mostReadTagged.slice(0, 7).map(post => ({
+        // 7 adede tamamla (eksikse sidebarData'dan doldur)
+        const targetMostRead = [...mostReadTagged]
+        if (targetMostRead.length < 7 && sidebarData?.length > 0) {
+          const needed = 7 - targetMostRead.length
+          const filler = sidebarData
+            .filter(p => !targetMostRead.some(m => m.id === p.id))
+            .slice(0, needed)
+          targetMostRead.push(...filler)
+        }
+
+        const formattedSidebar = targetMostRead.slice(0, 7).map(post => ({
           id: post.id,
           title: post.title,
           category: 'EN ÇOK OKUNANLAR',
@@ -1064,14 +1073,14 @@ const BlogPost = () => {
 
             {/* Sidebar - Sağ taraf */}
             <div className="lg:col-span-1">
-              <div className="h-96 sm:h-80 lg:h-[500px] flex flex-col gap-4">
+              <div className="h-auto flex flex-col gap-4">
                 
                 {/* En Çok Okunanlar Section - 4 yazı görünür, 3 yazı scroll */}
-                <div className="flex-[1.5] flex flex-col min-h-0">
+                <div className="flex flex-col">
                   <div className="bg-blue-500 text-white px-4 py-2 rounded-t-lg flex-shrink-0">
                     <h3 className="font-bold text-sm">EN ÇOK OKUNANLAR</h3>
                   </div>
-                  <div className="bg-white rounded-b-lg shadow-lg flex-1 overflow-y-auto min-h-0">
+                  <div className="bg-white rounded-b-lg shadow-lg min-h-0 overflow-y-auto" style={{ maxHeight: '260px' }}>
                     {mostReadNews.length > 0 ? (
                       <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                         {mostReadNews.map((news, index) => (

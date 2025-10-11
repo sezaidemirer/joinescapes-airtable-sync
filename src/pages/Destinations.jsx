@@ -63,7 +63,7 @@ const Destinations = () => {
       }
 
       // Destinasyon kategorisindeki yazıları getir
-      const { data: posts } = await blogPosts.getByCategory(destinationCategory.slug, { limit: 100 })
+      const { data: posts } = await blogPosts.getByCategory(destinationCategory.slug, { limit: 200 })
       
       if (posts && posts.length > 0) {
         setDestinations(posts)

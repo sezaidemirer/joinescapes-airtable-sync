@@ -284,9 +284,19 @@ async function syncAirtableToSupabase() {
       ? fields.Tags.map((t) => (typeof t === 'string' ? t : (t && t.name) ? t.name : null)).filter(Boolean)
       : [];
 
-    // Kategoriyi sabit Destinasyon (id=7) yap
-    const categoryId = 7;
-    console.log('📂 Kategori sabit: Destinasyon → id:', categoryId);
+    // Airtable'dan kategori bilgisini al ve Supabase ID'sine çevir
+    const airtableCategory = fields.Category;
+    const categoryMapping = {
+      'Kampanyalar ve Fırsatlar': 24,
+      'Yurt İçi Haberleri': 13, // Airtable'daki tam isim
+      'Yurt Dışı Haberleri': 12,
+      'Vize ve Seyahat Belgeleri': 16,
+      'Havayolu Haberleri': 9, // Havayolu Haberleri ID'si
+      'Destinasyon': 7 // Varsayılan olarak Destinasyon
+    };
+    
+    const categoryId = categoryMapping[airtableCategory] || 7; // Varsayılan: Destinasyon
+    console.log(`📂 Kategori: ${airtableCategory} → id: ${categoryId}`);
 
     const postData = {
       title: fields.Name,

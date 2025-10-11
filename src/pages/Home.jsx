@@ -303,10 +303,21 @@ const Home = () => {
           })
         }
         
-        // EN ÇOK OKUNANLAR'I DA YÜKLE - Sadece son 7 yazı
-        if (mostReadTagged.length > 0) {
-          // console.log('✅ EN ÇOK OKUNANLAR yükleniyor:', mostReadTagged.length, 'yazı')
-          const formattedMostRead = mostReadTagged.slice(0, 7).map(post => ({
+        // EN ÇOK OKUNANLAR'I YÜKLE - 7 adede tamamla (eksikse son yazılardan doldur)
+        {
+          // Önce encokokunan etiketli yazılar
+          const targetMostRead = [...mostReadTagged]
+          
+          // 7'den azsa, allPosts içinden kalanları sırayla ekle (tekrar olmasın)
+          if (targetMostRead.length < 7 && allPosts?.length > 0) {
+            const neededCount = 7 - targetMostRead.length
+            const filler = allPosts
+              .filter(p => !targetMostRead.some(m => m.id === p.id))
+              .slice(0, neededCount)
+            targetMostRead.push(...filler)
+          }
+          
+          const formattedMostRead = targetMostRead.slice(0, 7).map(post => ({
             id: post.id,
             title: post.title,
             category: 'EN ÇOK OKUNANLAR',
@@ -314,12 +325,7 @@ const Home = () => {
             category_slug: post.category_slug,
             slug: post.slug
           }))
-          // console.log('📝 Formatlanmış EN ÇOK OKUNANLAR:', formattedMostRead.length, 'yazı')
           setMostReadNews(formattedMostRead)
-        } else {
-          console.log('❌ EN ÇOK OKUNANLAR yüklenemedi - mostReadTagged boş')
-          // Fallback static data kaldırıldı - artık dinamik olarak çekiliyor
-          setMostReadNews([])
         }
         
         // "Bunları Okudunuz mu?" bölümü ana sayfada yok - kaldırıldı
@@ -1378,17 +1384,17 @@ const Home = () => {
 
             {/* Right Side - News List */}
             <div className="col-span-1 lg:col-span-1">
-              <div className="h-80 sm:h-96 lg:h-[500px] flex flex-col gap-2 sm:gap-4">
+              <div className="h-auto flex flex-col gap-2 sm:gap-4">
                 
-                {/* Most Read Section - 5 yazı görünür, fazlası scroll */}
-                <div className="flex-[2] flex flex-col min-h-0">
+                {/* Most Read Section - 7 yazı, 4'ü net görünür, kalanlar scroll */}
+                <div className="flex flex-col">
                   <div className="bg-blue-500 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-t-lg flex-shrink-0">
                     <h3 className="font-bold text-sm sm:text-base">EN ÇOK OKUNANLAR</h3>
                   </div>
-                  <div className="bg-white rounded-b-lg shadow-lg flex-1 overflow-y-auto min-h-0 max-h-96 sm:max-h-96">
+                  <div className="bg-white rounded-b-lg shadow-lg min-h-0 max-h-48 sm:max-h-56 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     {loading ? (
                       <div className="p-3 sm:p-4 space-y-3">
-                        {[1, 2, 3, 4, 5].map(i => (
+                        {[1, 2, 3, 4, 5, 6, 7].map(i => (
                           <div key={i} className="animate-pulse">
                             <div className="h-3 sm:h-4 bg-gray-200 rounded mb-1"></div>
                             <div className="h-3 sm:h-4 bg-gray-200 rounded w-2/3"></div>
@@ -1396,7 +1402,7 @@ const Home = () => {
                         ))}
                       </div>
                     ) : mostReadNews.length > 0 ? (
-                      <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                      <div className="h-full">
                         {mostReadNews.map((news, index) => (
                           <div 
                             key={news.id} 
