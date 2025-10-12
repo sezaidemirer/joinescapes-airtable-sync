@@ -31,7 +31,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appZdTkkdji3EGDx8';
 // Support both AIRTABLE_TABLE_ID and AIRTABLE_TABLE_NAME envs (some setups use name, others id)
-const AIRTABLE_TABLE_ID = process.env.AIRTABLE_TABLE_ID || process.env.AIRTABLE_TABLE_NAME || 'tblTcxVudBbXo2Svd';
+const AIRTABLE_BLOG_TABLE_ID = process.env.AIRTABLE_TABLE_ID || process.env.AIRTABLE_TABLE_NAME || 'tblTcxVudBbXo2Svd';
+const AIRTABLE_NEWS_TABLE_ID = process.env.AIRTABLE_TABLE_YURT_ICI_HABERLERI || 'tbl2RNxPbj3BVkLHT';
 
 if (!AIRTABLE_API_KEY) {
   console.error('❌ Airtable API Key eksik. Lütfen .env dosyasını kontrol edin.');
@@ -182,7 +183,7 @@ async function getJoinPRUserId() {
 }
 
 // Airtable'dan veri çek
-async function fetchAirtableRecords() {
+async function fetchAirtableRecords(tableId) {
   // Handle pagination to fetch all records safely; include light retry/backoff
   const allRecords = [];
   let offset = undefined;
@@ -193,7 +194,7 @@ async function fetchAirtableRecords() {
     do {
       const params = offset ? { offset } : undefined;
       const response = await axios.get(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`,
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${tableId}`,
         {
           headers: {
             'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
@@ -225,15 +226,15 @@ async function fetchAirtableRecords() {
       const backoffMs = 500 * attempt;
       console.log(`⏳ Tekrar denenecek (${attempt}/${maxAttempts}) ${backoffMs}ms sonra...`);
       await new Promise((r) => setTimeout(r, backoffMs));
-      return fetchAirtableRecords();
+      return fetchAirtableRecords(tableId);
     }
     return [];
   }
 }
 
 // Ana senkronizasyon fonksiyonu
-async function syncAirtableToSupabase() {
-  console.log('🚀 Airtable → Supabase senkronizasyonu başlatılıyor...');
+async function syncAirtableToSupabase(tableId, tableName = 'Tablo') {
+  console.log(`🚀 ${tableName} → Supabase senkronizasyonu başlatılıyor...`);
   
   // Join PR kullanıcısının ID'sini al
   const joinPRUserId = await getJoinPRUserId();
@@ -243,8 +244,8 @@ async function syncAirtableToSupabase() {
     return;
   }
   
-  const records = await fetchAirtableRecords();
-  console.log(`🔄 Airtable'dan ${records.length} yazı çekiliyor...`);
+  const records = await fetchAirtableRecords(tableId);
+  console.log(`🔄 ${tableName}'dan ${records.length} yazı çekiliyor...`);
   
   if (records.length === 0) {
     console.log('ℹ️ Airtable\'da yazı bulunamadı');
@@ -419,9 +420,37 @@ async function syncAirtableToSupabase() {
   console.log(`   ⏭️ Atlanan: ${skippedCount}`);
 }
 
+// Ana çalıştırma fonksiyonu - iki tabloyu sırayla sync et
+async function runSync() {
+  console.log('╔════════════════════════════════════════════╗');
+  console.log('║   AIRTABLE → SUPABASE SYNC BAŞLATILIYOR   ║');
+  console.log('╚════════════════════════════════════════════╝\n');
+  
+  try {
+    // 1. Blog tablosunu sync et (Destinasyonlar kategorisi)
+    console.log('📋 1/2: BLOG TABLOSU (Destinasyonlar)');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    await syncAirtableToSupabase(AIRTABLE_BLOG_TABLE_ID, 'Blog Tablosu');
+    console.log('\n✅ Blog tablosu sync tamamlandı!\n');
+    
+    // 2. Haberler tablosunu sync et (Yurt İçi Haberleri kategorisi)
+    console.log('📰 2/2: HABERLER TABLOSU (Yurt İçi Haberleri)');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    await syncAirtableToSupabase(AIRTABLE_NEWS_TABLE_ID, 'Haberler Tablosu');
+    console.log('\n✅ Haberler tablosu sync tamamlandı!\n');
+    
+    console.log('╔════════════════════════════════════════════╗');
+    console.log('║     TÜM TABLOLAR BAŞARIYLA SYNC EDİLDİ    ║');
+    console.log('╚════════════════════════════════════════════╝');
+  } catch (error) {
+    console.error('❌ Sync sırasında hata:', error);
+    throw error;
+  }
+}
+
 // Script'i çalıştır
 if (require.main === module) {
-  syncAirtableToSupabase()
+  runSync()
     .then(() => {
       console.log('✅ Senkronizasyon başarıyla tamamlandı');
       process.exit(0);
@@ -432,4 +461,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { syncAirtableToSupabase };
+module.exports = { syncAirtableToSupabase, runSync };

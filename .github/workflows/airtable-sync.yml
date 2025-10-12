@@ -35,8 +35,10 @@ jobs:
           VITE_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
-          # GitHub Secrets'ta tanımlı
+          # Blog tablosu (Destinasyonlar)
           AIRTABLE_TABLE_ID: ${{ secrets.AIRTABLE_TABLE_ID }}
+          # Haberler tablosu (Yurt İçi Haberleri)
+          AIRTABLE_TABLE_YURT_ICI_HABERLERI: ${{ secrets.AIRTABLE_TABLE_YURT_ICI_HABERLERI }}
         run: |
           export NODE_OPTIONS="--unhandled-rejections=strict"
           node scripts/airtable-to-supabase-sync.cjs
