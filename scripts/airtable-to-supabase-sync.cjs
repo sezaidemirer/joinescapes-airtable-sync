@@ -275,6 +275,13 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo') {
       .eq('airtable_record_id', record.id)
       .single();
     
+    // Eğer yazı zaten Supabase'de varsa SKIP et (güncellemeden atla)
+    if (existingPost) {
+      console.log(`✅ Zaten mevcut, atlanıyor: ${fields.Name} (ID: ${existingPost.id})`);
+      skippedCount++;
+      continue;
+    }
+    
     // Görsel URL'sini al
     const featuredImageUrl = fields.Attachments && fields.Attachments.length > 0 
       ? fields.Attachments[0].url 
@@ -342,65 +349,25 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo') {
     
     // Debug: postData'yı göster
     console.log(`   🔍 postData.category_id: ${postData.category_id}`);
-    if (existingPost) {
-      console.log(`   🔍 Mevcut post var (id: ${existingPost.id}), güncelleniyor...`);
-    }
+    console.log(`   🆕 Yeni post ekleniyor...`);
     
-                    // Upsert to minimize round-trips and avoid duplicates
-                    const { error, data: upsertedData } = await supabase
-                      .from('posts')
-                      .upsert(
-                        existingPost ? { ...postData, id: existingPost.id, updated_at: new Date().toISOString() } : postData,
-                        { onConflict: 'slug' }
-                      )
-                      .select('id, category_id');
+    // INSERT (sadece yeni yazılar)
+    const { error, data: insertedData } = await supabase
+      .from('posts')
+      .insert(postData)
+      .select('id, category_id');
 
     if (error) {
       console.error(`   ❌ Kaydetme hatası: ${error.message}`);
       skippedCount++;
-    } else {
-      if (existingPost) {
-        console.log(`   ✅ Güncellendi: ${fields.Name}`);
-        updatedCount++;
-      } else {
-        console.log(`   ✅ Eklendi: ${fields.Name}`);
-        addedCount++;
-      }
-      
-      // DEBUG: UPSERT sonrası category_id'yi kontrol et
-      if (upsertedData && upsertedData[0]) {
-        console.log(`   🔍 UPSERT sonrası category_id: ${upsertedData[0].category_id} (Beklenen: ${categoryId})`);
-        if (upsertedData[0].category_id !== categoryId) {
-          console.error(`   ⚠️ UYARI: category_id değişti! ${categoryId} → ${upsertedData[0].category_id}`);
-        }
-        
-        // 2 saniye bekle ve tekrar kontrol et
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const { data: recheck } = await supabase
-          .from('posts')
-          .select('id, category_id')
-          .eq('id', upsertedData[0].id)
-          .single();
-        
-        if (recheck) {
-          console.log(`   🔍 2 saniye sonra category_id: ${recheck.category_id}`);
-          if (recheck.category_id !== categoryId) {
-            console.error(`   ⚠️⚠️⚠️ KRİTİK: category_id 2 saniye sonra değişti! ${categoryId} → ${recheck.category_id}`);
-          }
-        }
-      }
+      continue; // Hata varsa sonraki yazıya geç
     }
-
-    // Post ID'yi garantile (existingPost yoksa yeniden çek)
-    let postId = existingPost && existingPost.id;
-    if (!postId) {
-      const { data: fetched } = await supabase
-        .from('posts')
-        .select('id')
-        .eq('airtable_record_id', record.id)
-        .single();
-      postId = fetched && fetched.id;
-    }
+    
+    console.log(`   ✅ Eklendi: ${fields.Name}`);
+    addedCount++;
+    
+    // Post ID'yi al
+    const postId = insertedData && insertedData[0] && insertedData[0].id;
 
     // Tags'i N-N ilişkiye yansıt
     if (postId && tagNames.length > 0) {
