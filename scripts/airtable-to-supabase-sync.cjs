@@ -233,8 +233,8 @@ async function fetchAirtableRecords(tableId) {
 }
 
 // Ana senkronizasyon fonksiyonu
-async function syncAirtableToSupabase(tableId, tableName = 'Tablo') {
-  console.log(`🚀 ${tableName} → Supabase senkronizasyonu başlatılıyor...`);
+async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCategoryId = 7) {
+  console.log(`🚀 ${tableName} → Supabase senkronizasyonu başlatılıyor... (Kategori ID: ${defaultCategoryId})`);
   
   // Join PR kullanıcısının ID'sini al
   const joinPRUserId = await getJoinPRUserId();
@@ -292,41 +292,9 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo') {
       ? fields.Tags.map((t) => (typeof t === 'string' ? t : (t && t.name) ? t.name : null)).filter(Boolean)
       : [];
 
-    // Airtable'dan kategori bilgisini al ve Supabase ID'sine çevir
-    const airtableCategory = fields.Category;
-    
-    // Debug: Kategori adını göster
-    console.log(`🔍 Airtable'dan gelen kategori: "${airtableCategory}"`);
-    
-    const categoryMapping = {
-      'kampanyalar ve firsatlar': 24,
-      'yurt ici haberleri': 13,
-      'yurt disi haberleri': 12,
-      'vize ve seyahat belgeleri': 16,
-      'havayolu haberleri': 9,
-      'destinasyon': 7
-    };
-    
-    // Türkçe karakterleri İngilizce'ye çevir ve küçük harfe çevir
-    const normalizedCategory = airtableCategory 
-      ? airtableCategory
-          .toLowerCase()
-          .replace(/ı/g, 'i')
-          .replace(/ğ/g, 'g')
-          .replace(/ü/g, 'u')
-          .replace(/ş/g, 's')
-          .replace(/ö/g, 'o')
-          .replace(/ç/g, 'c')
-          .replace(/İ/g, 'i')
-          .replace(/Ğ/g, 'g')
-          .replace(/Ü/g, 'u')
-          .replace(/Ş/g, 's')
-          .replace(/Ö/g, 'o')
-          .replace(/Ç/g, 'c')
-          .trim()
-      : '';
-    const categoryId = categoryMapping[normalizedCategory] || 7; // Varsayılan: Destinasyon
-    console.log(`📂 Kategori: ${airtableCategory} → normalized: "${normalizedCategory}" → id: ${categoryId}`);
+    // Kategori ID'sini kullan (tablo bazlı sabit kategori)
+    const categoryId = defaultCategoryId;
+    console.log(`📂 Kategori ID: ${categoryId}`);
 
     const postData = {
       title: fields.Name,
@@ -394,16 +362,16 @@ async function runSync() {
   console.log('╚════════════════════════════════════════════╝\n');
   
   try {
-    // 1. Blog tablosunu sync et (Destinasyonlar kategorisi)
-    console.log('📋 1/2: BLOG TABLOSU (Destinasyonlar)');
+    // 1. Blog tablosunu sync et (Destinasyonlar kategorisi - ID: 7)
+    console.log('📋 1/2: BLOG TABLOSU (Destinasyonlar - ID: 7)');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    await syncAirtableToSupabase(AIRTABLE_BLOG_TABLE_ID, 'Blog Tablosu');
+    await syncAirtableToSupabase(AIRTABLE_BLOG_TABLE_ID, 'Blog Tablosu', 7);
     console.log('\n✅ Blog tablosu sync tamamlandı!\n');
     
-    // 2. Haberler tablosunu sync et (Yurt İçi Haberleri kategorisi)
-    console.log('📰 2/2: HABERLER TABLOSU (Yurt İçi Haberleri)');
+    // 2. Haberler tablosunu sync et (Yurt İçi Haberleri kategorisi - ID: 13)
+    console.log('📰 2/2: HABERLER TABLOSU (Yurt İçi Haberleri - ID: 13)');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    await syncAirtableToSupabase(AIRTABLE_NEWS_TABLE_ID, 'Haberler Tablosu');
+    await syncAirtableToSupabase(AIRTABLE_NEWS_TABLE_ID, 'Haberler Tablosu', 13);
     console.log('\n✅ Haberler tablosu sync tamamlandı!\n');
     
     console.log('╔════════════════════════════════════════════╗');
