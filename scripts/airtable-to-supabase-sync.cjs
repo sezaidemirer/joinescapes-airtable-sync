@@ -155,6 +155,23 @@ function calculateReadTime(content) {
   return Math.ceil(wordCount / wordsPerMinute);
 }
 
+// Metni normalize et (ChatGPT kopyala-yapıştır karakterlerini temizle)
+function normalizeText(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/\r\n/g, '\n')      // Windows line endings → Unix
+    .replace(/\r/g, '\n')        // Old Mac line endings → Unix
+    .replace(/\u200B/g, '')      // Zero-width space (görünmez boşluk)
+    .replace(/\u00A0/g, ' ')     // Non-breaking space → normal space
+    .replace(/\u2028/g, '\n')    // Line separator
+    .replace(/\u2029/g, '\n')    // Paragraph separator
+    .replace(/[""]/g, '"')       // Smart quotes → normal quotes
+    .replace(/['']/g, "'")       // Smart quotes → normal quotes
+    .replace(/[\u2013\u2014]/g, '-')  // En/em dash → normal dash
+    .replace(/\s+/g, ' ')        // Multiple spaces → single space
+    .trim();
+}
+
 // Join PR kullanıcısının ID'sini bul
 async function getJoinPRUserId() {
   try {
@@ -341,10 +358,11 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
         ? fields.Tags.map((t) => (typeof t === 'string' ? t : (t && t.name) ? t.name : '')).filter(Boolean).sort().join(',')
         : '';
       
-      // KAPSAMLI değişiklik kontrolü - hash karşılaştırması
+      // KAPSAMLI değişiklik kontrolü - NORMALIZE ile hash karşılaştırması
+      // ChatGPT kopyala-yapıştır karakterleri temizleniyor!
       // Title, Content, Image URL, Tags, Category kontrolü
       const currentContentHash = crypto.createHash('md5')
-        .update(`${fields.Name}|${fields.Notes || ''}|${airtableImageUrl}|${airtableTags}|${defaultCategoryId}`)
+        .update(`${normalizeText(fields.Name)}|${normalizeText(fields.Notes || '')}|${airtableImageUrl}|${airtableTags}|${defaultCategoryId}`)
         .digest('hex');
       
       const existingTags = Array.isArray(existingPost.tags) 
@@ -352,7 +370,7 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
         : '';
       
       const existingContentHash = crypto.createHash('md5')
-        .update(`${existingPost.title}|${existingPost.content}|${existingPost.featured_image_url || ''}|${existingTags}|${defaultCategoryId}`)
+        .update(`${normalizeText(existingPost.title)}|${normalizeText(existingPost.content)}|${existingPost.featured_image_url || ''}|${existingTags}|${defaultCategoryId}`)
         .digest('hex');
       
       if (currentContentHash === existingContentHash) {
