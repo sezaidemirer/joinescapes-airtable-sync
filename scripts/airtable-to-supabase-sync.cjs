@@ -15,6 +15,7 @@ try {
 
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 
 // Supabase konfigürasyonu
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -182,6 +183,58 @@ async function getJoinPRUserId() {
   }
 }
 
+// Airtable görselini Supabase Storage'a yükle
+async function uploadImageToSupabase(airtableImageUrl, postTitle) {
+  if (!airtableImageUrl) return null;
+  
+  try {
+    console.log(`   📥 Görsel indiriliyor: ${airtableImageUrl.substring(0, 50)}...`);
+    
+    // Airtable'dan görseli indir
+    const imageResponse = await axios.get(airtableImageUrl, {
+      responseType: 'arraybuffer',
+      timeout: 30000
+    });
+    
+    // Dosya uzantısını belirle
+    const contentType = imageResponse.headers['content-type'] || 'image/jpeg';
+    const extension = contentType.split('/')[1] || 'jpg';
+    
+    // Benzersiz dosya adı oluştur
+    const fileName = `${crypto.randomUUID()}.${extension}`;
+    const filePath = `posts/${fileName}`;
+    
+    console.log(`   📤 Supabase'e yükleniyor: ${filePath}`);
+    
+    // Supabase Storage'a yükle
+    const { data, error } = await supabase.storage
+      .from('blog-images')
+      .upload(filePath, imageResponse.data, {
+        contentType: contentType,
+        upsert: false
+      });
+    
+    if (error) {
+      console.error(`   ❌ Storage yükleme hatası: ${error.message}`);
+      // Hata durumunda Airtable URL'sini kullan
+      return airtableImageUrl;
+    }
+    
+    // Public URL'yi oluştur
+    const { data: publicUrlData } = supabase.storage
+      .from('blog-images')
+      .getPublicUrl(filePath);
+    
+    console.log(`   ✅ Görsel yüklendi: ${publicUrlData.publicUrl}`);
+    return publicUrlData.publicUrl;
+    
+  } catch (error) {
+    console.error(`   ❌ Görsel yükleme hatası: ${error.message}`);
+    // Hata durumunda Airtable URL'sini kullan
+    return airtableImageUrl;
+  }
+}
+
 // Airtable'dan veri çek
 async function fetchAirtableRecords(tableId) {
   // Handle pagination to fetch all records safely; include light retry/backoff
@@ -271,21 +324,36 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     // Supabase'de zaten var mı kontrol et
     const { data: existingPost } = await supabase
       .from('posts')
-      .select('id, title, author_id, author_name')
+      .select('id, title, author_id, author_name, featured_image_url')
       .eq('airtable_record_id', record.id)
       .single();
     
-    // Eğer yazı zaten Supabase'de varsa SKIP et (güncellemeden atla)
-    if (existingPost) {
-      console.log(`✅ Zaten mevcut, atlanıyor: ${fields.Name} (ID: ${existingPost.id})`);
-      skippedCount++;
-      continue;
+    const isUpdate = !!existingPost;
+    
+    if (isUpdate) {
+      console.log(`🔄 Güncelleme modu: ${fields.Name} (ID: ${existingPost.id})`);
+    } else {
+      console.log(`🆕 Yeni yazı: ${fields.Name}`);
     }
     
-    // Görsel URL'sini al
-    const featuredImageUrl = fields.Attachments && fields.Attachments.length > 0 
-      ? fields.Attachments[0].url 
-      : null;
+    // Görsel URL'sini al ve Supabase Storage'a yükle
+    let featuredImageUrl = null;
+    if (fields.Attachments && fields.Attachments.length > 0) {
+      const airtableImageUrl = fields.Attachments[0].url;
+      
+      // Eğer update modundaysa ve mevcut görsel Supabase Storage'daysa, yeni görsel gerekli mi kontrol et
+      if (isUpdate && existingPost.featured_image_url?.includes('blog-images')) {
+        // Airtable URL'si değiştiyse yeni görseli yükle
+        console.log(`   🖼️ Airtable görseli kontrol ediliyor...`);
+        featuredImageUrl = await uploadImageToSupabase(airtableImageUrl, fields.Name);
+      } else {
+        console.log(`   🖼️ Airtable görseli yükleniyor...`);
+        featuredImageUrl = await uploadImageToSupabase(airtableImageUrl, fields.Name);
+      }
+    } else if (isUpdate) {
+      // Update modunda ama attachment yoksa mevcut görseli koru
+      featuredImageUrl = existingPost.featured_image_url;
+    }
     
     // Airtable Tags alanını diziye çevir
     const tagNames = Array.isArray(fields.Tags)
@@ -317,25 +385,52 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     
     // Debug: postData'yı göster
     console.log(`   🔍 postData.category_id: ${postData.category_id}`);
-    console.log(`   🆕 Yeni post ekleniyor...`);
     
-    // INSERT (sadece yeni yazılar)
-    const { error, data: insertedData } = await supabase
-      .from('posts')
-      .insert(postData)
-      .select('id, category_id');
+    let postId;
+    
+    if (isUpdate) {
+      // UPDATE modu
+      console.log(`   🔄 Güncelleniyor...`);
+      
+      const updateData = {
+        ...postData,
+        updated_at: new Date().toISOString()
+      };
+      
+      const { error } = await supabase
+        .from('posts')
+        .update(updateData)
+        .eq('id', existingPost.id);
 
-    if (error) {
-      console.error(`   ❌ Kaydetme hatası: ${error.message}`);
-      skippedCount++;
-      continue; // Hata varsa sonraki yazıya geç
+      if (error) {
+        console.error(`   ❌ Güncelleme hatası: ${error.message}`);
+        skippedCount++;
+        continue;
+      }
+      
+      console.log(`   ✅ Güncellendi: ${fields.Name}`);
+      updatedCount++;
+      postId = existingPost.id;
+      
+    } else {
+      // INSERT modu
+      console.log(`   🆕 Yeni post ekleniyor...`);
+      
+      const { error, data: insertedData } = await supabase
+        .from('posts')
+        .insert(postData)
+        .select('id, category_id');
+
+      if (error) {
+        console.error(`   ❌ Kaydetme hatası: ${error.message}`);
+        skippedCount++;
+        continue;
+      }
+      
+      console.log(`   ✅ Eklendi: ${fields.Name}`);
+      addedCount++;
+      postId = insertedData && insertedData[0] && insertedData[0].id;
     }
-    
-    console.log(`   ✅ Eklendi: ${fields.Name}`);
-    addedCount++;
-    
-    // Post ID'yi al
-    const postId = insertedData && insertedData[0] && insertedData[0].id;
 
     // Tags'i N-N ilişkiye yansıt
     if (postId && tagNames.length > 0) {
