@@ -333,22 +333,36 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     if (isUpdate) {
       console.log(`🔄 Güncelleme modu: ${fields.Name} (ID: ${existingPost.id})`);
       
-      // Değişiklik kontrolü - hash karşılaştırması
+      // Airtable'dan gelen veriler
+      const airtableImageUrl = (fields.Attachments && fields.Attachments.length > 0) 
+        ? fields.Attachments[0].url 
+        : '';
+      const airtableTags = Array.isArray(fields.Tags)
+        ? fields.Tags.map((t) => (typeof t === 'string' ? t : (t && t.name) ? t.name : '')).filter(Boolean).sort().join(',')
+        : '';
+      
+      // KAPSAMLI değişiklik kontrolü - hash karşılaştırması
+      // Title, Content, Image URL, Tags, Category kontrolü
       const currentContentHash = crypto.createHash('md5')
-        .update(`${fields.Name}|${fields.Notes || ''}`)
+        .update(`${fields.Name}|${fields.Notes || ''}|${airtableImageUrl}|${airtableTags}|${defaultCategoryId}`)
         .digest('hex');
       
+      const existingTags = Array.isArray(existingPost.tags) 
+        ? existingPost.tags.sort().join(',') 
+        : '';
+      
       const existingContentHash = crypto.createHash('md5')
-        .update(`${existingPost.title}|${existingPost.content}`)
+        .update(`${existingPost.title}|${existingPost.content}|${existingPost.featured_image_url || ''}|${existingTags}|${defaultCategoryId}`)
         .digest('hex');
       
       if (currentContentHash === existingContentHash) {
-        console.log(`   ✅ İçerik değişmemiş, atlanıyor`);
+        console.log(`   ✅ Hiçbir değişiklik yok (title, content, görsel, etiketler, kategori aynı), atlanıyor`);
         skippedCount++;
         continue;
       }
       
-      console.log(`   🔄 İçerik değişmiş, güncellenecek`);
+      console.log(`   🔄 Değişiklik tespit edildi, güncellenecek`);
+      console.log(`      Hash - Mevcut: ${currentContentHash.substring(0, 8)}... | Eski: ${existingContentHash.substring(0, 8)}...`);
     } else {
       console.log(`🆕 Yeni yazı: ${fields.Name}`);
     }
