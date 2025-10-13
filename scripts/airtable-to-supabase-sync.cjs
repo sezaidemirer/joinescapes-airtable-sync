@@ -324,7 +324,7 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     // Supabase'de zaten var mı kontrol et
     const { data: existingPost } = await supabase
       .from('posts')
-      .select('id, title, author_id, author_name, featured_image_url')
+      .select('id, title, content, excerpt, featured_image_url, author_id, author_name, tags')
       .eq('airtable_record_id', record.id)
       .single();
     
@@ -332,6 +332,23 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     
     if (isUpdate) {
       console.log(`🔄 Güncelleme modu: ${fields.Name} (ID: ${existingPost.id})`);
+      
+      // Değişiklik kontrolü - hash karşılaştırması
+      const currentContentHash = crypto.createHash('md5')
+        .update(`${fields.Name}|${fields.Notes || ''}`)
+        .digest('hex');
+      
+      const existingContentHash = crypto.createHash('md5')
+        .update(`${existingPost.title}|${existingPost.content}`)
+        .digest('hex');
+      
+      if (currentContentHash === existingContentHash) {
+        console.log(`   ✅ İçerik değişmemiş, atlanıyor`);
+        skippedCount++;
+        continue;
+      }
+      
+      console.log(`   🔄 İçerik değişmiş, güncellenecek`);
     } else {
       console.log(`🆕 Yeni yazı: ${fields.Name}`);
     }
@@ -341,13 +358,21 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     if (fields.Attachments && fields.Attachments.length > 0) {
       const airtableImageUrl = fields.Attachments[0].url;
       
-      // Eğer update modundaysa ve mevcut görsel Supabase Storage'daysa, yeni görsel gerekli mi kontrol et
-      if (isUpdate && existingPost.featured_image_url?.includes('blog-images')) {
-        // Airtable URL'si değiştiyse yeni görseli yükle
-        console.log(`   🖼️ Airtable görseli kontrol ediliyor...`);
-        featuredImageUrl = await uploadImageToSupabase(airtableImageUrl, fields.Name);
+      // Görsel değişiklik kontrolü
+      if (isUpdate && existingPost.featured_image_url) {
+        // Görsel URL hash'lerini karşılaştır
+        const currentImageHash = crypto.createHash('md5').update(airtableImageUrl).digest('hex');
+        const existingImageHash = crypto.createHash('md5').update(existingPost.featured_image_url).digest('hex');
+        
+        if (currentImageHash === existingImageHash) {
+          console.log(`   ✅ Görsel değişmemiş, mevcut görsel kullanılıyor`);
+          featuredImageUrl = existingPost.featured_image_url;
+        } else {
+          console.log(`   🖼️ Görsel değişmiş, yeni görsel yükleniyor...`);
+          featuredImageUrl = await uploadImageToSupabase(airtableImageUrl, fields.Name);
+        }
       } else {
-        console.log(`   🖼️ Airtable görseli yükleniyor...`);
+        console.log(`   🖼️ Yeni görsel yükleniyor...`);
         featuredImageUrl = await uploadImageToSupabase(airtableImageUrl, fields.Name);
       }
     } else if (isUpdate) {
@@ -380,7 +405,8 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
       // UI için isimleri text[] alanında da tutalım (ayrıca N-N ilişki kuracağız)
       tags: tagNames,
       featured_image_url: featuredImageUrl, // Airtable'dan gelen görsel
-      published_at: new Date().toISOString() // Done yazıları yayınlanmış
+      published_at: new Date().toISOString(), // Done yazıları yayınlanmış
+      last_synced_at: new Date().toISOString() // Son sync zamanı
     };
     
     // Debug: postData'yı göster
@@ -394,7 +420,8 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
       
       const updateData = {
         ...postData,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        last_synced_at: new Date().toISOString()
       };
       
       const { error } = await supabase
