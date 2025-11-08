@@ -17,6 +17,22 @@ const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const AIRTABLE_LAST_MODIFIED_FIELD_CANDIDATES = [
+  'Last Modified',
+  'Last modified',
+  'Last Modified Time',
+  'Last modified time',
+  'LastModified',
+  'Last_Modified'
+];
+const AIRTABLE_SORT_FIELD_CANDIDATES = [
+  ...AIRTABLE_LAST_MODIFIED_FIELD_CANDIDATES,
+  'Created',
+  'Created Time',
+  'createdTime'
+];
+
 // Supabase konfigürasyonu
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
@@ -172,6 +188,19 @@ function normalizeText(text) {
     .trim();
 }
 
+function getAirtableLastModified(fields) {
+  if (!fields || typeof fields !== 'object') return null;
+  for (const key of AIRTABLE_LAST_MODIFIED_FIELD_CANDIDATES) {
+    if (fields[key]) {
+      const date = new Date(fields[key]);
+      if (!Number.isNaN(date.getTime())) {
+        return date;
+      }
+    }
+  }
+  return null;
+}
+
 // Join PR kullanıcısının ID'sini bul
 async function getJoinPRUserId() {
   try {
@@ -253,53 +282,111 @@ async function uploadImageToSupabase(airtableImageUrl, postTitle) {
 }
 
 // Airtable'dan veri çek
-async function fetchAirtableRecords(tableId) {
-  // Handle pagination to fetch all records safely; include light retry/backoff
-  const allRecords = [];
-  let offset = undefined;
-  let attempt = 0;
-  const maxAttempts = 3;
+async function fetchAirtableRecords(tableId, options = {}) {
+  const {
+    maxRecords = Infinity,
+    sortFieldCandidates = [],
+    sortDirection = 'desc',
+    pageSize = 50
+  } = options;
 
-  try {
-    do {
-      const params = offset ? { offset } : undefined;
-      const response = await axios.get(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${tableId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-            'User-Agent': 'joinescapes-airtable-sync/1.0'
-          },
-          params
+  async function fetchWithSort(sortField) {
+    const allRecords = [];
+    let offset;
+    let page = 0;
+    const maxAttemptsPerPage = 5;
+
+    while (true) {
+      page += 1;
+      let attempt = 0;
+      while (attempt < maxAttemptsPerPage) {
+        attempt += 1;
+        try {
+          const params = {
+            pageSize: Math.min(pageSize, Math.max(1, maxRecords - allRecords.length))
+          };
+          if (offset) params.offset = offset;
+          if (sortField) {
+            params['sort[0][field]'] = sortField;
+            params['sort[0][direction]'] = sortDirection;
+          }
+
+          const response = await axios.get(
+            `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${tableId}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                'Content-Type': 'application/json',
+                'User-Agent': 'joinescapes-airtable-sync/1.0'
+              },
+              params
+            }
+          );
+
+          if (response.status !== 200) {
+            throw new Error(`Airtable HTTP ${response.status}`);
+          }
+
+          const { records, offset: nextOffset } = response.data || {};
+          if (Array.isArray(records)) {
+            allRecords.push(...records);
+          }
+
+          offset = nextOffset;
+
+          if (allRecords.length >= maxRecords) {
+            return allRecords.slice(0, maxRecords);
+          }
+
+          // Airtable rate limit (5 req/sn) için küçük bekleme
+          await delay(400);
+          break;
+        } catch (error) {
+          const status = error?.response?.status;
+          const backoffMs = status === 429
+            ? Math.min(15000 * attempt, 60000)
+            : Math.min(2000 * attempt, 10000);
+
+          console.error(`❌ Airtable veri çekme hatası (sayfa ${page}, deneme ${attempt}/${maxAttemptsPerPage}):`, error.message);
+          if (status === 429) {
+            console.warn(`   ⚠️ Airtable 429 rate limit. ${backoffMs / 1000}s bekleniyor...`);
+          } else {
+            console.warn(`   ⚠️ ${backoffMs / 1000}s sonra tekrar denenecek...`);
+          }
+
+          if (attempt >= maxAttemptsPerPage) {
+            console.error(`   ❌ Sayfa ${page} ${maxAttemptsPerPage} denemede çekilemedi, senkronizasyon durduruluyor.`);
+            throw error;
+          }
+
+          await delay(backoffMs);
         }
-      );
-
-      if (response.status !== 200) {
-        throw new Error(`Airtable HTTP ${response.status}`);
       }
 
-      const { records, offset: nextOffset } = response.data || {};
-      if (Array.isArray(records)) {
-        allRecords.push(...records);
-      }
-      offset = nextOffset;
-      // brief delay to respect Airtable API rate limits
-      await new Promise((r) => setTimeout(r, 200));
-    } while (offset);
-
-    return allRecords;
-  } catch (error) {
-    attempt += 1;
-    console.error('❌ Airtable veri çekme hatası:', error.message);
-    if (attempt < maxAttempts) {
-      const backoffMs = 500 * attempt;
-      console.log(`⏳ Tekrar denenecek (${attempt}/${maxAttempts}) ${backoffMs}ms sonra...`);
-      await new Promise((r) => setTimeout(r, backoffMs));
-      return fetchAirtableRecords(tableId);
+      if (!offset) break;
     }
-    return [];
+
+    return allRecords.slice(0, maxRecords);
   }
+
+  let lastError;
+  const fieldsToTry = [...sortFieldCandidates, null];
+
+  for (const sortField of fieldsToTry) {
+    try {
+      return await fetchWithSort(sortField);
+    } catch (error) {
+      lastError = error;
+      if (error?.response?.status === 422 && sortField) {
+        console.warn(`   ⚠️ "${sortField}" alanı bulunamadı, bir sonraki alan deneniyor...`);
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  if (lastError) throw lastError;
+  return [];
 }
 
 // Ana senkronizasyon fonksiyonu
@@ -314,8 +401,13 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     return;
   }
   
-  const records = await fetchAirtableRecords(tableId);
-  console.log(`🔄 ${tableName}'dan ${records.length} yazı çekiliyor...`);
+  const records = await fetchAirtableRecords(tableId, {
+    maxRecords: 1,
+    sortFieldCandidates: AIRTABLE_SORT_FIELD_CANDIDATES,
+    sortDirection: 'desc',
+    pageSize: 1
+  });
+  console.log(`🔄 ${tableName}'dan ${records.length} yazı çekiliyor... (yalnızca en güncel kayıt)`);
   
   if (records.length === 0) {
     console.log('ℹ️ Airtable\'da yazı bulunamadı');
@@ -341,13 +433,22 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     // Supabase'de zaten var mı kontrol et
     const { data: existingPost } = await supabase
       .from('posts')
-      .select('id, title, content, excerpt, featured_image_url, author_id, author_name, tags')
+      .select('id, title, content, excerpt, featured_image_url, author_id, author_name, tags, updated_at')
       .eq('airtable_record_id', record.id)
       .single();
     
     const isUpdate = !!existingPost;
     
+    const airtableLastModified = getAirtableLastModified(fields);
+
     if (isUpdate) {
+      const supabaseUpdatedAt = existingPost?.updated_at ? new Date(existingPost.updated_at) : null;
+      if (airtableLastModified && supabaseUpdatedAt && supabaseUpdatedAt > airtableLastModified) {
+        console.log(`   ⏭️ Admin panel versiyonu daha yeni (Supabase: ${supabaseUpdatedAt.toISOString()} > Airtable: ${airtableLastModified.toISOString()}), Airtable verisi uygulanmadı`);
+        skippedCount++;
+        continue;
+      }
+
       console.log(`🔄 Güncelleme modu: ${fields.Name} (ID: ${existingPost.id})`);
       
       // Airtable'dan gelen veriler
