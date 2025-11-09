@@ -3,7 +3,7 @@ name: Airtable to Supabase Sync
 
 on:
   schedule:
-    - cron: '*/30 * * * *' # her 30 dakikada bir (Airtable API rate limit için optimize edildi)
+    - cron: '0 * * * *' # saat başı çalışır
   workflow_dispatch: {} # Manuel çalıştırma da aktif
 
 concurrency:

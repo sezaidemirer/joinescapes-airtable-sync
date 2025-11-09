@@ -160,149 +160,129 @@ const TravelFinder = () => {
     }
   };
 
-  // Türkiye destinasyonlarını tespit et
-  const isTurkeyDestination = (article) => {
-    const content = (article.title + ' ' + article.excerpt + ' ' + article.content).toLowerCase();
-    
-    // Türkiye ile ilgili anahtar kelimeler
-    const turkeyKeywords = [
-      'türkiye', 'turkey', 'istanbul', 'ankara', 'izmir', 'antalya', 'bodrum', 'kapadokya',
-      'pamukkale', 'trabzon', 'rize', 'artvin', 'kars', 'van', 'gaziantep', 'urfa',
-      'mardin', 'diyarbakır', 'adana', 'mersin', 'tarsus', 'çanakkale', 'bursa',
-      'çeşme', 'alaçatı', 'datça', 'marmaris', 'fethiye', 'kaş', 'demre', 'kemer',
-      'side', 'alanya', 'belek', 'kuşadası', 'selçuk', 'efes', 'pamukkale',
-      'safranbolu', 'amasra', 'sinop', 'samsun', 'ordu', 'giresun', 'trabzon',
-      'rize', 'artvin', 'ardahan', 'kars', 'ağrı', 'van', 'bitlis', 'muş',
-      'malatya', 'elazığ', 'tunceli', 'bingöl', 'erzincan', 'erzurum', 'bayburt',
-      'gümüşhane', 'ordu', 'giresun', 'trabzon', 'rize', 'artvin'
-    ];
-    
-    // Yabancı ülke anahtar kelimeleri
-    const foreignKeywords = [
-      'italya', 'italy', 'roma', 'rome', 'milan', 'venedik', 'venice', 'floransa', 'florence',
-      'fransa', 'france', 'paris', 'nice', 'lyon', 'marsilya', 'marseille',
-      'ispanya', 'spain', 'madrid', 'barcelona', 'sevilla', 'seville', 'granada',
-      'yunanistan', 'greece', 'atina', 'athens', 'santorini', 'mykonos', 'crete',
-      'almanya', 'germany', 'berlin', 'munih', 'munich', 'hamburg', 'frankfurt',
-      'ingiltere', 'england', 'londra', 'london', 'manchester', 'birmingham',
-      'japonya', 'japan', 'tokyo', 'kyoto', 'osaka', 'hiroşima', 'hiroshima',
-      'çin', 'china', 'pekin', 'beijing', 'şanghay', 'shanghai', 'hong kong',
-      'hindistan', 'india', 'delhi', 'mumbai', 'bangalore', 'goa',
-      'tayland', 'thailand', 'bangkok', 'phuket', 'chiang mai', 'krabi',
-      'vietnam', 'vietnam', 'ho chi minh', 'hanoi', 'halong bay',
-      'endonezya', 'indonesia', 'jakarta', 'bali', 'yogyakarta',
-      'malezya', 'malaysia', 'kuala lumpur', 'penang', 'langkawi',
-      'singapur', 'singapore', 'singapur',
-      'filippinler', 'philippines', 'manila', 'cebu', 'palawan',
-      'kamboçya', 'cambodia', 'phnom penh', 'siam reap',
-      'laos', 'laos', 'vientiane', 'luang prabang',
-      'myanmar', 'myanmar', 'yangon', 'bagan',
-      'bangladesh', 'bangladesh', 'dhaka',
-      'sri lanka', 'sri lanka', 'colombo', 'kandy',
-      'maldives', 'maldivler', 'male',
-      'dubai', 'abu dhabi', 'şarjah', 'sharjah',
-      'mısır', 'egypt', 'kahire', 'cairo', 'luxor', 'aswan',
-      'marakeş', 'marrakech', 'rabat', 'casablanca',
-      'tunus', 'tunisia', 'tunis', 'sidi bou said',
-      'cezayir', 'algeria', 'algiers',
-      'libya', 'libya', 'tripoli',
-      'sudan', 'sudan', 'khartoum',
-      'etiyopya', 'ethiopia', 'addis ababa',
-      'kenya', 'kenya', 'nairobi', 'mombasa',
-      'tanzanya', 'tanzania', 'dar es salaam', 'zanzibar',
-      'güney afrika', 'south africa', 'cape town', 'johannesburg',
-      'mısır', 'egypt', 'kahire', 'cairo', 'luxor', 'aswan',
-      'brezilya', 'brazil', 'rio de janeiro', 'sao paulo', 'brasilia',
-      'arjantin', 'argentina', 'buenos aires', 'cordoba', 'mendoza',
-      'şili', 'chile', 'santiago', 'valparaiso',
-      'peru', 'peru', 'lima', 'cusco', 'machu picchu',
-      'kolombiya', 'colombia', 'bogota', 'medellin',
-      'venezuela', 'venezuela', 'caracas',
-      'ekvador', 'ecuador', 'quito', 'guayaquil',
-      'bolivya', 'bolivia', 'la paz', 'sucre',
-      'paraguay', 'paraguay', 'asuncion',
-      'uruguay', 'uruguay', 'montevideo',
-      'guyana', 'guyana', 'georgetown',
-      'surinam', 'suriname', 'paramaribo',
-      'kanada', 'canada', 'toronto', 'vancouver', 'montreal',
-      'amerika', 'america', 'usa', 'new york', 'los angeles', 'chicago', 'miami',
-      'meksika', 'mexico', 'mexico city', 'cancun', 'tulum', 'playa del carmen',
-      'guatemala', 'guatemala', 'guatemala city', 'antigua',
-      'belize', 'belize', 'belize city',
-      'honduras', 'honduras', 'tegucigalpa',
-      'el salvador', 'el salvador', 'san salvador',
-      'nikaragua', 'nicaragua', 'managua',
-      'kosta rika', 'costa rica', 'san jose',
-      'panama', 'panama', 'panama city',
-      'küba', 'cuba', 'havana', 'varadero',
-      'jamaika', 'jamaica', 'kingston',
-      'dominik', 'dominican republic', 'santo domingo',
-      'haiti', 'haiti', 'port-au-prince',
-      'porto rico', 'puerto rico', 'san juan',
-      'trinidad', 'trinidad and tobago', 'port of spain',
-      'barbados', 'barbados', 'bridgetown',
-      'antigua', 'antigua and barbuda', 'saint johns',
-      'saint kitts', 'saint kitts and nevis', 'basseterre',
-      'dominika', 'dominica', 'roseau',
-      'saint lucia', 'saint lucia', 'castries',
-      'saint vincent', 'saint vincent and the grenadines', 'kingstown',
-      'grenada', 'grenada', 'saint georges',
-      'bahamas', 'bahamas', 'nassau',
-      'bermuda', 'bermuda', 'hamilton',
-      'avustralya', 'australia', 'sydney', 'melbourne', 'brisbane',
-      'yeni zelanda', 'new zealand', 'auckland', 'wellington',
-      'papua yeni gine', 'papua new guinea', 'port moresby',
-      'fiji', 'fiji', 'suva',
-      'samoa', 'samoa', 'apia',
-      'tonga', 'tonga', 'nuku alofa',
-      'vanuatu', 'vanuatu', 'port vila',
-      'solomon', 'solomon islands', 'honiara',
-      'kiribati', 'kiribati', 'tarawa',
-      'tuvalu', 'tuvalu', 'funafuti',
-      'nauru', 'nauru', 'yaren',
-      'palau', 'palau', 'melekeok',
-      'marshall', 'marshall islands', 'majuro',
-      'mikronezya', 'micronesia', 'palikir',
-      'kuzey kore', 'north korea', 'pyongyang',
-      'güney kore', 'south korea', 'seoul', 'busan',
-      'moğolistan', 'mongolia', 'ulan bator',
-      'kazakistan', 'kazakhstan', 'nur-sultan', 'almaty',
-      'özbekistan', 'uzbekistan', 'tashkent', 'samarkand',
-      'kırgızistan', 'kyrgyzstan', 'bishkek',
-      'tacikistan', 'tajikistan', 'dushanbe',
-      'türkmenistan', 'turkmenistan', 'ashgabat',
-      'afganistan', 'afghanistan', 'kabul',
-      'pakistan', 'pakistan', 'islamabad', 'karachi',
-      'iran', 'iran', 'tehran', 'isfahan', 'shiraz',
-      'irak', 'iraq', 'baghdad', 'basra',
-      'suriy', 'syria', 'damascus', 'aleppo',
-      'lübnan', 'lebanon', 'beirut',
-      'israil', 'israel', 'tel aviv', 'jerusalem',
-      'filistin', 'palestine', 'gaza', 'ramallah',
-      'jordan', 'jordan', 'amman',
-      'suudi arabistan', 'saudi arabia', 'riyadh', 'jeddah',
-      'kuveyt', 'kuwait', 'kuwait city',
-      'bahrain', 'bahrain', 'manama',
-      'katar', 'qatar', 'doha',
-      'birleşik arap emirlikleri', 'united arab emirates', 'dubai', 'abu dhabi',
-      'oman', 'oman', 'muscat',
-      'yemen', 'yemen', 'sanaa',
-      'izlanda', 'iceland', 'reykjavik'
-    ];
-    
-    // Türkiye anahtar kelimesi var mı kontrol et
-    const hasTurkeyKeyword = turkeyKeywords.some(keyword => content.includes(keyword));
-    
-    // Yabancı ülke anahtar kelimesi var mı kontrol et
-    const hasForeignKeyword = foreignKeywords.some(keyword => content.includes(keyword));
-    
-    // Debug için console.log ekle
-    console.log('🔍 Article:', article.title);
-    console.log('🇹🇷 Has Turkey Keyword:', hasTurkeyKeyword);
-    console.log('🌍 Has Foreign Keyword:', hasForeignKeyword);
-    console.log('📝 Content Preview:', content.substring(0, 100) + '...');
-    
-    return hasTurkeyKeyword && !hasForeignKeyword;
+  const DOMESTIC_TAG_SLUGS = [
+    'turkiye', 'türkiye', 'yurtici', 'yurt-ici', 'yurtiçi', 'yurtiçi-tatil', 'yurtici-tatil', 'yurtici-rotalar',
+    'turkiye-tatilleri', 'turkiye-rotalari', 'memleket', 'turkiye-otelleri', 'turkiye-gezileri'
+  ];
+
+  const FOREIGN_TAG_SLUGS = [
+    'yurtdisi', 'yurt-disi', 'yurtdışı', 'yurtdışı-tatil', 'international', 'global',
+    'yurtdisi-rotalar', 'yabanci', 'avrupa', 'amerika', 'asya', 'afrika', 'oceania'
+  ];
+
+  const turkeyKeywords = [
+    'türkiye', 'turkey', 'istanbul', 'ankara', 'izmir', 'antalya', 'bodrum', 'kapadokya',
+    'pamukkale', 'trabzon', 'rize', 'artvin', 'kars', 'van', 'gaziantep', 'urfa',
+    'mardin', 'diyarbakır', 'adana', 'mersin', 'tarsus', 'çanakkale', 'bursa',
+    'çeşme', 'alaçatı', 'datça', 'marmaris', 'fethiye', 'kaş', 'demre', 'kemer',
+    'side', 'alanya', 'belek', 'kuşadası', 'selçuk', 'efes', 'safranbolu', 'amasra',
+    'sinop', 'samsun', 'ordu', 'giresun', 'nevşehir', 'kapadokya', 'konya', 'antalya', 'bodrum', 'kıbrıs'
+  ];
+
+  const foreignKeywords = [
+    'italya', 'italy', 'roma', 'rome', 'milan', 'venedik', 'venice', 'floransa', 'florence',
+    'fransa', 'france', 'paris', 'ispanya', 'spain', 'madrid', 'barcelona', 'yunanistan', 'greece',
+    'almanya', 'germany', 'berlin', 'ingiltere', 'england', 'londra', 'london',
+    'amerika', 'usa', 'united states', 'kanada', 'canada', 'bali', 'dubai', 'abu dhabi',
+    'meksika', 'mexico', 'thailand', 'tayland', 'japan', 'japonya', 'çin', 'china', 'hindistan', 'india',
+    'afrika', 'avrupa', 'asya', 'amerika', 'oceania', 'australia', 'australya', 'reykjavik', 'dublin', 'lisbon', 'porto', 'budapest'
+  ];
+
+  const normalizeText = (text = '') =>
+    text
+      .toString()
+      .toLowerCase()
+      .replace(/ı/g, 'i')
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c');
+
+  const normalizeText = (text = '') =>
+    text
+      .toString()
+      .toLowerCase()
+      .replace(/ı/g, 'i')
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c');
+
+  const getArticleTagSlugs = (article) => {
+    if (!article) return [];
+
+    const extractSlugs = (arr) => {
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .map(tag => {
+          if (!tag) return null;
+          if (typeof tag === 'string') return normalizeText(tag);
+          if (typeof tag.slug === 'string') return normalizeText(tag.slug);
+          if (typeof tag.name === 'string') return normalizeText(tag.name);
+          return null;
+        })
+        .filter(Boolean);
+    };
+
+    if (Array.isArray(article.tag_objects)) {
+      return extractSlugs(article.tag_objects);
+    }
+
+    if (Array.isArray(article.tags)) {
+      return extractSlugs(article.tags);
+    }
+
+    if (typeof article.tags === 'string' && article.tags.trim().length > 0) {
+      try {
+        const parsed = JSON.parse(article.tags);
+        return extractSlugs(parsed);
+      } catch (error) {
+        return [normalizeText(article.tags)];
+      }
+    }
+
+    if (Array.isArray(article.tag_slugs)) {
+      return extractSlugs(article.tag_slugs);
+    }
+
+    return [];
+  };
+
+  const getArticleTextBlob = (article) =>
+    normalizeText(`${article.title || ''} ${article.excerpt || ''} ${article.content || ''} ${article.slug || ''}`);
+
+  const hasKeyword = (text, keywords) => keywords.some(keyword => text.includes(keyword));
+
+  const isDomesticArticle = (article) => {
+    const tagSlugs = getArticleTagSlugs(article);
+    if (tagSlugs.some(slug => DOMESTIC_TAG_SLUGS.includes(slug))) return true;
+    if (tagSlugs.some(slug => FOREIGN_TAG_SLUGS.includes(slug))) return false;
+
+    const blob = getArticleTextBlob(article);
+    if (hasKeyword(blob, turkeyKeywords)) return true;
+
+    return false;
+  };
+
+  const isForeignArticle = (article) => {
+    const tagSlugs = getArticleTagSlugs(article);
+    if (tagSlugs.some(slug => FOREIGN_TAG_SLUGS.includes(slug))) return true;
+    if (tagSlugs.some(slug => DOMESTIC_TAG_SLUGS.includes(slug))) return false;
+
+    const blob = getArticleTextBlob(article);
+    const hasDomestic = hasKeyword(blob, turkeyKeywords);
+    const hasForeign = hasKeyword(blob, foreignKeywords);
+
+    if (hasForeign && !hasDomestic) return true;
+    if (hasDomestic && !hasForeign) return false;
+
+    const slug = normalizeText(article.slug || '');
+    if (hasKeyword(slug, turkeyKeywords)) return false;
+    if (hasKeyword(slug, foreignKeywords)) return true;
+
+    return hasForeign;
   };
 
   // Sonuçları hesapla
@@ -320,7 +300,9 @@ const TravelFinder = () => {
               isDomestic = true;
             }
           }
-          userTags.push(...answersMap[questionId][answerKey]);
+          const mappedTags = answersMap[questionId][answerKey] || [];
+          const normalized = mappedTags.map(tag => normalizeText(tag));
+          userTags.push(...normalized);
         }
       });
     });
@@ -352,16 +334,19 @@ const TravelFinder = () => {
     // Yurt içi/dışı filtreleme
     let filteredDestinations = realDestinations;
     if (isDomestic) {
-      // Yurt içi seçildiyse sadece Türkiye yazılarını al
-      filteredDestinations = realDestinations.filter(article => isTurkeyDestination(article));
+      filteredDestinations = realDestinations.filter(article => isDomesticArticle(article));
     } else {
-      // Yurt dışı seçildiyse sadece yabancı ülke yazılarını al
-      filteredDestinations = realDestinations.filter(article => !isTurkeyDestination(article));
+      filteredDestinations = realDestinations.filter(article => isForeignArticle(article));
     }
 
-    // Eğer filtrelenmiş yazı yoksa, filtreyi kaldır
     if (filteredDestinations.length === 0) {
-      filteredDestinations = realDestinations;
+      filteredDestinations = isDomestic
+        ? realDestinations.filter(article => !isForeignArticle(article))
+        : realDestinations.filter(article => !isDomesticArticle(article));
+
+      if (filteredDestinations.length === 0) {
+        filteredDestinations = realDestinations;
+      }
     }
 
     // Gerçek yazıları skorla - ETİKET SİSTEMİ KULLANARAK
@@ -369,7 +354,8 @@ const TravelFinder = () => {
       let score = 0;
       
       // Yazının etiketlerini al (JSON array olarak gelir)
-      const articleTags = article.tags || [];
+      const articleTags = getArticleTagSlugs(article);
+      const contentBlob = getArticleTextBlob(article);
       
       // Kullanıcı seçimlerini yazı etiketleriyle karşılaştır
       userTags.forEach(userTag => {
@@ -379,8 +365,7 @@ const TravelFinder = () => {
         }
         
         // Alternatif eşleşmeler için içerik kontrolü
-        const content = (article.title + ' ' + article.excerpt + ' ' + article.content).toLowerCase();
-        if (content.includes(userTag.toLowerCase())) {
+        if (contentBlob.includes(userTag)) {
           score += 1; // İçerik eşleşmesi daha düşük puan
         }
       });

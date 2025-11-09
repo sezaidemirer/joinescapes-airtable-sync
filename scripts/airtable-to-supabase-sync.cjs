@@ -287,8 +287,14 @@ async function fetchAirtableRecords(tableId, options = {}) {
     maxRecords = Infinity,
     sortFieldCandidates = [],
     sortDirection = 'desc',
-    pageSize = 50
+    pageSize = 50,
+    initialDelayMs = 0
   } = options;
+
+  if (initialDelayMs > 0) {
+    console.log(`⏳ Airtable isteği öncesi ${initialDelayMs / 1000}s bekleniyor...`);
+    await delay(initialDelayMs);
+  }
 
   async function fetchWithSort(sortField) {
     const allRecords = [];
@@ -390,7 +396,7 @@ async function fetchAirtableRecords(tableId, options = {}) {
 }
 
 // Ana senkronizasyon fonksiyonu
-async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCategoryId = 7) {
+async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCategoryId = 7, options = {}) {
   console.log(`🚀 ${tableName} → Supabase senkronizasyonu başlatılıyor... (Kategori ID: ${defaultCategoryId})`);
   
   // Join PR kullanıcısının ID'sini al
@@ -402,12 +408,13 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
   }
   
   const records = await fetchAirtableRecords(tableId, {
-    maxRecords: 1,
+    maxRecords: options.maxRecords ?? Infinity,
     sortFieldCandidates: AIRTABLE_SORT_FIELD_CANDIDATES,
     sortDirection: 'desc',
-    pageSize: 1
+    pageSize: options.pageSize ?? 50,
+    initialDelayMs: options.initialDelayMs ?? 0
   });
-  console.log(`🔄 ${tableName}'dan ${records.length} yazı çekiliyor... (yalnızca en güncel kayıt)`);
+  console.log(`🔄 ${tableName}'dan ${records.length} yazı çekiliyor...`);
   
   if (records.length === 0) {
     console.log('ℹ️ Airtable\'da yazı bulunamadı');
@@ -620,13 +627,21 @@ async function runSync() {
     // 1. Blog tablosunu sync et (Destinasyonlar kategorisi - ID: 7)
     console.log('📋 1/2: BLOG TABLOSU (Destinasyonlar - ID: 7)');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    await syncAirtableToSupabase(AIRTABLE_BLOG_TABLE_ID, 'Blog Tablosu', 7);
+    await syncAirtableToSupabase(AIRTABLE_BLOG_TABLE_ID, 'Blog Tablosu', 7, {
+      initialDelayMs: 5000,
+      maxRecords: 30,
+      pageSize: 10
+    });
     console.log('\n✅ Blog tablosu sync tamamlandı!\n');
     
     // 2. Haberler tablosunu sync et (Yurt İçi Haberleri kategorisi - ID: 13)
     console.log('📰 2/2: HABERLER TABLOSU (Yurt İçi Haberleri - ID: 13)');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    await syncAirtableToSupabase(AIRTABLE_NEWS_TABLE_ID, 'Haberler Tablosu', 13);
+    await syncAirtableToSupabase(AIRTABLE_NEWS_TABLE_ID, 'Haberler Tablosu', 13, {
+      initialDelayMs: 10000,
+      maxRecords: 30,
+      pageSize: 10
+    });
     console.log('\n✅ Haberler tablosu sync tamamlandı!\n');
     
     console.log('╔════════════════════════════════════════════╗');
