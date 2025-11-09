@@ -284,11 +284,12 @@ async function uploadImageToSupabase(airtableImageUrl, postTitle) {
 // Airtable'dan veri çek
 async function fetchAirtableRecords(tableId, options = {}) {
   const {
-    maxRecords = Infinity,
+    maxRecords = 1,
     sortFieldCandidates = [],
     sortDirection = 'desc',
-    pageSize = 50,
-    initialDelayMs = 0
+    pageSize = 1,
+    initialDelayMs = 0,
+    maxAttemptsPerPage = 8
   } = options;
 
   if (initialDelayMs > 0) {
@@ -300,7 +301,6 @@ async function fetchAirtableRecords(tableId, options = {}) {
     const allRecords = [];
     let offset;
     let page = 0;
-    const maxAttemptsPerPage = 5;
 
     while (true) {
       page += 1;
@@ -349,14 +349,19 @@ async function fetchAirtableRecords(tableId, options = {}) {
           break;
         } catch (error) {
           const status = error?.response?.status;
-          const backoffMs = status === 429
-            ? Math.min(15000 * attempt, 60000)
-            : Math.min(2000 * attempt, 10000);
+          let backoffMs;
 
           console.error(`❌ Airtable veri çekme hatası (sayfa ${page}, deneme ${attempt}/${maxAttemptsPerPage}):`, error.message);
+
           if (status === 429) {
+            const retryAfterHeader = error?.response?.headers?.['retry-after'];
+            const retryAfterSeconds = retryAfterHeader ? parseFloat(Array.isArray(retryAfterHeader) ? retryAfterHeader[0] : retryAfterHeader) : NaN;
+            const retryAfterMs = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0 ? retryAfterSeconds * 1000 : NaN;
+            const incrementalBackoff = (attempt || 1) * 60000; // 60s, 120s, 180s...
+            backoffMs = Number.isFinite(retryAfterMs) ? Math.max(retryAfterMs, 45000) : Math.min(incrementalBackoff, 240000);
             console.warn(`   ⚠️ Airtable 429 rate limit. ${backoffMs / 1000}s bekleniyor...`);
           } else {
+            backoffMs = Math.min(2000 * attempt, 10000);
             console.warn(`   ⚠️ ${backoffMs / 1000}s sonra tekrar denenecek...`);
           }
 
@@ -408,11 +413,12 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
   }
   
   const records = await fetchAirtableRecords(tableId, {
-    maxRecords: options.maxRecords ?? Infinity,
+    maxRecords: options.maxRecords ?? 1,
     sortFieldCandidates: AIRTABLE_SORT_FIELD_CANDIDATES,
     sortDirection: 'desc',
-    pageSize: options.pageSize ?? 50,
-    initialDelayMs: options.initialDelayMs ?? 0
+    pageSize: options.pageSize ?? 1,
+    initialDelayMs: options.initialDelayMs ?? 0,
+    maxAttemptsPerPage: options.maxAttemptsPerPage ?? 10
   });
   console.log(`🔄 ${tableName}'dan ${records.length} yazı çekiliyor...`);
   
@@ -629,8 +635,9 @@ async function runSync() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     await syncAirtableToSupabase(AIRTABLE_BLOG_TABLE_ID, 'Blog Tablosu', 7, {
       initialDelayMs: 5000,
-      maxRecords: 30,
-      pageSize: 10
+      maxRecords: 1,
+      pageSize: 1,
+      maxAttemptsPerPage: 10
     });
     console.log('\n✅ Blog tablosu sync tamamlandı!\n');
     
@@ -639,8 +646,9 @@ async function runSync() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     await syncAirtableToSupabase(AIRTABLE_NEWS_TABLE_ID, 'Haberler Tablosu', 13, {
       initialDelayMs: 10000,
-      maxRecords: 30,
-      pageSize: 10
+      maxRecords: 1,
+      pageSize: 1,
+      maxAttemptsPerPage: 10
     });
     console.log('\n✅ Haberler tablosu sync tamamlandı!\n');
     
