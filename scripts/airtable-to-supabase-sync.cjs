@@ -312,9 +312,14 @@ async function fetchAirtableRecords(tableId, options = {}) {
             pageSize: Math.min(pageSize, Math.max(1, maxRecords - allRecords.length))
           };
           if (offset) params.offset = offset;
+          // ÖNEMLİ: Sadece "Done" olan kayıtları çek - Airtable formula filter
+          // Son değişiklik yapılan TÜM "Done" yazılarını çek (sadece 1 tane değil!)
+          params['filterByFormula'] = "{Status} = 'Done'";
+          // Son değişiklik yapılan tüm yazıları çekmek için Last Modified'a göre sırala
+          // En yeni değiştirilenler önce gelsin (desc = azalan sıra)
           if (sortField) {
             params['sort[0][field]'] = sortField;
-            params['sort[0][direction]'] = sortDirection;
+            params['sort[0][direction]'] = sortDirection; // 'desc' = en yeni önce
           }
 
           const response = await axios.get(
@@ -412,11 +417,13 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     return;
   }
   
+  // ÖNEMLİ: Son değişiklik yapılan TÜM "Done" yazılarını çek
+  // Sadece 1 tane değil, son değişiklik yapılan TÜM yazılar önemli!
   const records = await fetchAirtableRecords(tableId, {
-    maxRecords: options.maxRecords ?? 1,
-    sortFieldCandidates: AIRTABLE_SORT_FIELD_CANDIDATES,
-    sortDirection: 'desc',
-    pageSize: options.pageSize ?? 1,
+    maxRecords: options.maxRecords ?? 10000, // Tüm "Done" kayıtları çek (limit: 10.000)
+    sortFieldCandidates: AIRTABLE_SORT_FIELD_CANDIDATES, // "Last Modified" alanına göre sırala
+    sortDirection: 'desc', // En yeni değiştirilenler önce
+    pageSize: options.pageSize ?? 100, // Her sayfada 100 kayıt çek
     initialDelayMs: options.initialDelayMs ?? 0,
     maxAttemptsPerPage: options.maxAttemptsPerPage ?? 10
   });
@@ -427,21 +434,26 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     return;
   }
   
+  // "Done" olan kayıtları say
+  const doneRecords = records.filter(r => r.fields?.Status === 'Done');
+  console.log(`✅ Toplam ${doneRecords.length} adet "Done" kayıt bulundu (Toplam kayıt: ${records.length})`);
+  
   let addedCount = 0;
   let updatedCount = 0;
   let skippedCount = 0;
+  let doneProcessedCount = 0;
   
   for (const record of records) {
     const fields = record.fields;
     
     // Sadece "Done" olanları işle
     if (fields.Status !== 'Done') {
-      console.log(`⏭️ ${fields.Name} - Status: ${fields.Status} (atlanıyor)`);
       skippedCount++;
       continue;
     }
     
-    console.log(`📝 İşleniyor: ${fields.Name}`);
+    doneProcessedCount++;
+    console.log(`\n📝 [${doneProcessedCount}/${doneRecords.length}] İşleniyor: ${fields.Name}`);
     
     // Supabase'de zaten var mı kontrol et
     const { data: existingPost } = await supabase
@@ -616,11 +628,13 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     await new Promise((r) => setTimeout(r, 100));
   }
   
-  console.log(`🎉 Senkronizasyon tamamlandı!`);
-  console.log(`   📊 Toplam: ${records.length}`);
-  console.log(`   ➕ Eklenen: ${addedCount}`);
+  console.log(`\n🎉 Senkronizasyon tamamlandı!`);
+  console.log(`   📊 Toplam kayıt: ${records.length}`);
+  console.log(`   ✅ "Done" kayıt sayısı: ${doneRecords.length}`);
+  console.log(`   ➕ Yeni eklenen: ${addedCount}`);
   console.log(`   📝 Güncellenen: ${updatedCount}`);
-  console.log(`   ⏭️ Atlanan: ${skippedCount}`);
+  console.log(`   ⏭️ Atlanan (In progress/Todo): ${skippedCount}`);
+  console.log(`   ✅ İşlenen "Done" kayıt: ${doneProcessedCount}`);
 }
 
 // Ana çalıştırma fonksiyonu - iki tabloyu sırayla sync et
@@ -635,8 +649,8 @@ async function runSync() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     await syncAirtableToSupabase(AIRTABLE_BLOG_TABLE_ID, 'Blog Tablosu', 7, {
       initialDelayMs: 5000,
-      maxRecords: 1,
-      pageSize: 1,
+      maxRecords: 10000, // Tüm "Done" kayıtları çekmek için yüksek limit
+      pageSize: 100, // Airtable API maksimum sayfa boyutu
       maxAttemptsPerPage: 10
     });
     console.log('\n✅ Blog tablosu sync tamamlandı!\n');
@@ -646,8 +660,8 @@ async function runSync() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     await syncAirtableToSupabase(AIRTABLE_NEWS_TABLE_ID, 'Haberler Tablosu', 13, {
       initialDelayMs: 10000,
-      maxRecords: 1,
-      pageSize: 1,
+      maxRecords: 10000, // Tüm "Done" kayıtları çekmek için yüksek limit
+      pageSize: 100, // Airtable API maksimum sayfa boyutu
       maxAttemptsPerPage: 10
     });
     console.log('\n✅ Haberler tablosu sync tamamlandı!\n');

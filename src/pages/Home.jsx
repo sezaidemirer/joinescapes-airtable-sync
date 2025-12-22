@@ -145,69 +145,22 @@ const Home = () => {
       }
       
       if (allPosts && allPosts.length > 0) {
-        // Ana Sayfa etiketli olanları filtrele
-        let mainPagePosts = allPosts.filter(post => 
-          post.tag_objects?.some(tag => 
-            tag.slug === 'main' ||
-            tag.name === 'Ana Sayfa'
-          )
-        )
-        console.log('🏠 Ana Sayfa etiketli yazılar:', mainPagePosts.length)
+        // ÖNEMLİ: Banner'da son eklenen 10 yazı gösterilecek
+        // Ana Sayfa etiketli yazılar artık kullanılmıyor - direkt son 10 yazı
         
-        // Eğer ana sayfa etiketli yazı yoksa, son 10 yazıyı al
-        if (mainPagePosts.length === 0) {
-          console.log('⚠️ Ana sayfa etiketli yazı bulunamadı, son yazılar kullanılıyor')
-          mainPagePosts = allPosts.slice(0, 10)
-        }
+        // ÖNEMLİ: Son eklenen 10 yazıyı banner'da göster
+        // Her yeni yazı eklendiğinde veya güncellendiğinde, son 10 yazı otomatik güncellenir
+        // published_at'e göre sıralı (en yeni önce) - zaten yukarıda sıralanmış
+        const latestPosts = allPosts.slice(0, 10)
         
-        // DEBUG: İlk 3 yazının etiketlerini göster
-        console.log('🔍 İlk 3 yazının etiketleri:')
-        allPosts.slice(0, 3).forEach((post, index) => {
-          console.log(`${index + 1}. ${post.title}`)
-          console.log('   Etiketler:', post.tag_objects?.map(tag => `${tag.slug} (${tag.name})`) || 'YOK')
+        console.log('📰 Banner için son 10 yazı seçiliyor...')
+        console.log('📝 Son 10 yazı:')
+        latestPosts.forEach((post, index) => {
+          console.log(`${index + 1}. ${post.title} (${post.published_at || post.created_at})`)
         })
         
-        // DETAYLI LOG - hangi yazılar Ana Sayfa etiketli?
-        if (mainPagePosts.length > 0) {
-          console.log('📋 Ana Sayfa etiketli yazılar:')
-          mainPagePosts.forEach((post, index) => {
-            console.log(`${index + 1}. ${post.title} - ${post.category_name}`)
-          })
-        } else {
-          console.log('⚠️ Hiç Ana Sayfa etiketli yazı bulunamadı!')
-          console.log('🔍 İlk 5 yazının etiketleri:')
-          allPosts.slice(0, 5).forEach((post, index) => {
-            console.log(`${index + 1}. ${post.title}`)
-            console.log('   Etiketler:', post.tag_objects?.map(tag => `${tag.slug} (${tag.name})`) || 'YOK')
-          })
-          console.log('🔍 Tüm mevcut etiketler:')
-          const allTags = new Set()
-          allPosts.forEach(post => {
-            post.tag_objects?.forEach(tag => allTags.add(`${tag.slug} (${tag.name})`))
-          })
-          console.log(Array.from(allTags))
-        }
-        
-        // HEMEN CAROUSEL'E YÜKLE! (10 TANE GARANTİSİ)
-        let carouselPosts = mainPagePosts.slice(0, 10)
-        
-        // Eğer Ana Sayfa etiketli yazı 10'dan azsa, son yazılarla tamamla
-        if (carouselPosts.length < 10) {
-          console.log(`⚠️ Ana Sayfa etiketli sadece ${carouselPosts.length} yazı var, son yazılarla tamamlanıyor...`)
-          
-          // Ana Sayfa etiketli olmayan son yazıları bul
-          const mainPostIds = carouselPosts.map(p => p.id)
-          const remainingPosts = allPosts.filter(post => !mainPostIds.includes(post.id))
-          
-          // Eksik olan kadar ekle
-          const needed = 10 - carouselPosts.length
-          const additionalPosts = remainingPosts.slice(0, needed)
-          carouselPosts = [...carouselPosts, ...additionalPosts]
-          
-          console.log(`✅ Toplam ${carouselPosts.length} yazı carousel'e eklendi (${mainPagePosts.length} Ana Sayfa + ${additionalPosts.length} son haber)`)
-        }
-        
-        if (carouselPosts.length > 0) {
+        if (latestPosts.length > 0) {
+          const carouselPosts = latestPosts
           const carouselSlides = carouselPosts.map(post => ({
             id: post.id,
             title: post.title,
@@ -223,52 +176,13 @@ const Home = () => {
             author_name: post.author_name || 'Editör'
           }))
           
-          console.log('🎠 Carousel\'e yükleniyor:', carouselSlides.length, 'slide (İLK 10 ANA SAYFA ETİKETLİ)')
-          console.log('📝 Carousel yazıları:', carouselSlides.map((slide, i) => `${i+1}. ${slide.title.slice(0, 40)}...`))
-          
-          // JENNIFER LOPEZ YAZISINI DEBUG ET
-          const jenniferPost = carouselSlides.find(slide => 
-            slide.title.toLowerCase().includes('jennifer') || 
-            slide.title.toLowerCase().includes('lopez')
-          )
-          if (jenniferPost) {
-            console.log('🎬 Jennifer Lopez yazısı bulundu:')
-            console.log('   Başlık:', jenniferPost.title)
-            console.log('   Slug:', jenniferPost.slug)
-            console.log('   Kategori:', jenniferPost.category_slug)
-            console.log('   Link:', `/${jenniferPost.category_slug}/${jenniferPost.slug}`)
-            console.log('   MANUEL TEST URL:', `http://localhost:5173/${jenniferPost.category_slug}/${jenniferPost.slug}`)
-          }
-          
-          // TÜM CAROUSEL LİNKLERİNİ DEBUG ET
-          console.log('🔗 Tüm carousel linkleri:')
-          carouselSlides.forEach((slide, i) => {
-            console.log(`${i+1}. ${slide.title.slice(0, 30)}... -> /${slide.category_slug}/${slide.slug}`)
-          })
+          console.log('🎠 Banner carousel\'e yükleniyor:', carouselSlides.length, 'slide (SON 10 YAZI)')
           setHeroSlides(carouselSlides)
           setCurrentSlide(0) // Carousel'i başa al
-          // Loading'i carousel verisi yüklendikten sonra kapat
-          setTimeout(() => setLoading(false), 100) // Kısa delay ile UI render'ına zaman ver
+          setTimeout(() => setLoading(false), 100)
         } else {
-          console.log('⚠️ Ana Sayfa etiketli yazı bulunamadı! Son yazılar gösteriliyor...')
-          // Son yazıları göster
-          const latestSlides = allPosts.slice(0, 10).map(post => ({
-            id: post.id,
-            title: post.title,
-            subtitle: post.excerpt || '',
-            image: post.featured_image_url || 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=60',
-            category: post.category_name || 'Haber',
-            category_color: post.category_color || '#3B82F6',
-            category_slug: post.category_slug || 'haberler',
-            slug: post.slug,
-            views: post.views || 0,
-            likes: post.likes || 0,
-            published_at: post.published_at || post.created_at,
-            author_name: post.author_name || 'Editör'
-          }))
-          console.log('📰 Son haberler gösteriliyor:', latestSlides.length, 'slide')
-          setHeroSlides(latestSlides)
-          setCurrentSlide(0) // Carousel'i başa al
+          console.log('⚠️ Hiç yazı bulunamadı!')
+          setHeroSlides([])
           setTimeout(() => setLoading(false), 100)
         }
         
