@@ -3,11 +3,12 @@
 // Airtable'dan Supabase'e otomatik senkronizasyon
 // Bu script Vercel Cron Job tarafından her 5 dakikada bir çalıştırılır
 
-// Yerel geliştirmede .env yükle; GitHub Actions/Vercel gibi ortamlarda gerekmez
+// Yerel geliştirmede .env yükle (proje kökünden); GitHub Actions/Vercel gibi ortamlarda gerekmez
+const path = require('path');
 try {
   if (!process.env.GITHUB_ACTIONS) {
     // eslint-disable-next-line global-require
-    require('dotenv').config();
+    require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
   }
 } catch (_) {
   // dotenv yoksa sessizce devam et (CI ortamı)
@@ -118,6 +119,13 @@ async function linkTagsToPost(postId, tagIds) {
   }
 }
 
+// Slug listesini ID listesine çevirir (mevcut tagları slug ile bulur)
+async function lookupTagIdsBySlugs(slugs) {
+  if (!slugs || slugs.length === 0) return [];
+  const { data } = await supabase.from('tags').select('id, slug').in('slug', slugs);
+  return (data || []).map(t => t.id).filter(Boolean);
+}
+
 // Category yardımcıları
 async function getOrCreateCategoryIdByName(categoryName) {
   if (!categoryName) return null;
@@ -162,6 +170,94 @@ function generateSlug(title) {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .trim();
+}
+
+// Airtable değerini normalize et (karşılaştırma için)
+function normalizeAirtableValue(val) {
+  if (val == null || val === '') return '';
+  return String(val)
+    .toLowerCase()
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Airtable Mood, Süre, Tarz, Bütçe kolonlarından Tatil Bulucu tag slug'larını üret
+// (Tatil Bulucu answersMap ile uyumlu slug'lar)
+function getTatilBulucuTagSlugs(fields) {
+  const slugs = [];
+  if (!fields || typeof fields !== 'object') return slugs;
+
+  const moodMap = {
+    'deniz-kum-gunes': 'deniz-kum-gunes', 'deniz kum güneş': 'deniz-kum-gunes', 'deniz': 'deniz-kum-gunes',
+    'tarih-kultur': 'tarih-kultur', 'tarih kültür': 'tarih-kultur', 'tarih': 'tarih-kultur',
+    'doga-kesif': 'doga-kesif', 'doğa keşif': 'doga-kesif', 'doga kesif': 'doga-kesif', 'doga': 'doga-kesif',
+    'sehir-hayati': 'sehir-hayati', 'şehir-hayati': 'sehir-hayati', 'şehir hayatı': 'sehir-hayati', 'sehir hayati': 'sehir-hayati', 'sehir': 'sehir-hayati',
+    'luks-huzur': 'luks-huzur', 'lüks huzur': 'luks-huzur', 'luks huzur': 'luks-huzur', 'luks': 'luks-huzur',
+    'gastronomi': 'gastronomi', 'yemek': 'gastronomi', 'mutfak': 'gastronomi',
+    'eglence-gece': 'eglence-gece', 'gece hayati': 'eglence-gece', 'eglence': 'eglence-gece'
+  };
+  // Güncellendi: yeni süre slug'ları (sure-2-3-gun vb.)
+  const sureMap = {
+    '2-3': 'sure-2-3-gun', '3-4': 'sure-2-3-gun', '3 4': 'sure-2-3-gun', 'kisa': 'sure-2-3-gun', 'kısa': 'sure-2-3-gun',
+    '4-7': 'sure-4-7-gun', '5-7': 'sure-4-7-gun', '5 7': 'sure-4-7-gun', 'orta': 'sure-4-7-gun',
+    '7+': 'sure-7-gun-uzeri', 'uzun': 'sure-7-gun-uzeri', '10+': 'sure-7-gun-uzeri', '7 uzeri': 'sure-7-gun-uzeri'
+  };
+  const tarzMap = {
+    'solo': 'solo', 'tek': 'solo', 'tek tabanca': 'solo',
+    'romantik': 'romantik-cift', 'cift': 'romantik-cift', 'çift': 'romantik-cift', 'romantik-cift': 'romantik-cift',
+    'aile': 'aile',
+    'grup': 'grup-tatil', 'arkadas': 'grup-tatil', 'arkadaş': 'grup-tatil', 'grup-arkadas': 'grup-tatil', 'grup-tatil': 'grup-tatil'
+  };
+  const butceMap = {
+    'ekonomik': 'ekonomik-tatil', 'ucuz': 'ekonomik-tatil', 'ekonomik-tatil': 'ekonomik-tatil',
+    'orta': 'orta-butceli-', 'orta-butce': 'orta-butceli-', 'orta butce': 'orta-butceli-', 'orta-butceli': 'orta-butceli-', 'orta-butceli-': 'orta-butceli-',
+    'luks': 'luks-tatil', 'lüks': 'luks-tatil', 'luks-tatil': 'luks-tatil'
+  };
+
+  const moodVal = normalizeAirtableValue(fields.Mood);
+  if (moodVal && moodMap[moodVal]) slugs.push(moodMap[moodVal]);
+
+  const sureVal = normalizeAirtableValue(fields.Süre);
+  if (sureVal && sureMap[sureVal]) slugs.push(sureMap[sureVal]);
+
+  const tarzVal = normalizeAirtableValue(fields.Tarz);
+  if (tarzVal && tarzMap[tarzVal]) slugs.push(tarzMap[tarzVal]);
+
+  const butceVal = normalizeAirtableValue(fields.Bütçe);
+  if (butceVal && butceMap[butceVal]) slugs.push(butceMap[butceVal]);
+
+  return slugs;
+}
+
+// Yurt içi/dışı: başlık + slug'a göre (assign-yurt-ici-yurt-disi-tags.cjs ile aynı mantık)
+const TURKEY_KEYWORDS = [
+  'turkiye', 'turkey', 'istanbul', 'ankara', 'izmir', 'antalya', 'bodrum', 'kapadokya', 'pamukkale',
+  'trabzon', 'rize', 'artvin', 'kars', 'van', 'gaziantep', 'urfa', 'sanliurfa', 'mardin', 'diyarbakir',
+  'adana', 'mersin', 'tarsus', 'canakkale', 'bursa', 'cesme', 'alacati', 'datca', 'marmaris', 'fethiye',
+  'kas', 'demre', 'kemer', 'side', 'alanya', 'belek', 'kusadasi', 'selcuk', 'efes', 'safranbolu', 'amasra',
+  'sinop', 'samsun', 'ordu', 'giresun', 'nevsehir', 'konya', 'kibris', 'yurt ici', 'yurtici', 'memleket',
+  'adiyaman', 'afyonkarahisar', 'agri', 'aksaray', 'amasya', 'ardahan', 'aydin', 'balikesir', 'bartin', 'batman', 'bayburt', 'bilecik', 'bingol', 'bitlis', 'bolu', 'burdur', 'cankiri', 'corum', 'denizli', 'duzce', 'edirne', 'elazig', 'erzincan', 'erzurum', 'eskisehir', 'gumushane', 'hakkari', 'hatay', 'igdir', 'isparta', 'kahramanmaras', 'karabuk', 'karaman', 'kastamonu', 'kayseri', 'kilis', 'kirikkale', 'kirklareli', 'kirsehir', 'kocaeli', 'kutahya', 'malatya', 'manisa', 'mugla', 'mus', 'nigde', 'osmaniye', 'sakarya', 'siirt', 'sivas', 'sirnak', 'tekirdag', 'tokat', 'tunceli', 'usak', 'yalova', 'yozgat', 'zonguldak'
+];
+const FOREIGN_KEYWORDS = [
+  'italya', 'italy', 'roma', 'rome', 'milan', 'venedik', 'venice', 'floransa', 'florence',
+  'fransa', 'france', 'paris', 'ispanya', 'spain', 'madrid', 'barcelona', 'yunanistan', 'greece', 'atina', 'santorini', 'mikonos', 'zagori', 'kos', 'selanik', 'thessaloniki', 'simi', 'symi',
+  'almanya', 'germany', 'berlin', 'ingiltere', 'england', 'londra', 'london', 'amerika', 'united states', 'kanada', 'canada', 'bali', 'dubai', 'abu dhabi', 'meksika', 'mexico', 'thailand', 'tayland', 'japan', 'japonya', 'cin', 'china', 'hindistan', 'india', 'afrika', 'avrupa', 'oceania', 'australia', 'australya', 'reykjavik', 'dublin', 'lisbon', 'budapest', 'misir', 'egypt', 'sharm', 'hurghada', 'katar', 'bahreyn', 'urdun', 'fas', 'portekiz', 'malta', 'iskandinav', 'iskandinavya', 'fiyort', 'norvec', 'norway', 'isvec', 'sweden', 'finlandiya', 'finland', 'danimarka', 'denmark', 'kopenhag', 'singapur', 'singapore', 'malezya', 'malaysia', 'endonezya', 'indonesia', 'vietnam', 'viet nam', 'hong kong', 'guney kore', 'kore', 'filipinler', 'philippines', 'uruguay', 'guney amerika', 'lima', 'peru', 'karadag', 'montenegro', 'umman', 'oman', 'musandam', 'sirbistan', 'serbia', 'belgrad', 'belgrade', 'rusya', 'russia', 'seul', 'seoul', 'sardinya', 'sardinia'
+];
+
+function getYurtIciYurtDisiTag(title, slug) {
+  const blob = normalizeAirtableValue((title || '') + ' ' + (slug || ''));
+  if (!blob) return null;
+  const isForeign = FOREIGN_KEYWORDS.some(k => blob.includes(normalizeAirtableValue(k)));
+  if (isForeign) return 'yurt-disi';
+  const isDomestic = TURKEY_KEYWORDS.some(k => blob.includes(normalizeAirtableValue(k)));
+  if (isDomestic) return 'yurt-ici';
+  return null;
 }
 
 // Read time hesaplama
@@ -312,9 +408,8 @@ async function fetchAirtableRecords(tableId, options = {}) {
             pageSize: Math.min(pageSize, Math.max(1, maxRecords - allRecords.length))
           };
           if (offset) params.offset = offset;
-          // ÖNEMLİ: Sadece "Done" olan kayıtları çek - Airtable formula filter
-          // Son değişiklik yapılan TÜM "Done" yazılarını çek (sadece 1 tane değil!)
-          params['filterByFormula'] = "{Status} = 'Done'";
+          // Son 2 saatte değişen "Done" kayıtları çek
+          params['filterByFormula'] = "AND({Status} = 'Done', IS_AFTER(LAST_MODIFIED_TIME(), DATEADD(NOW(), -2, 'hours')))";
           // Son değişiklik yapılan tüm yazıları çekmek için Last Modified'a göre sırala
           // En yeni değiştirilenler önce gelsin (desc = azalan sıra)
           if (sortField) {
@@ -539,19 +634,39 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     }
     
     // Airtable Tags alanını diziye çevir
-    const tagNames = Array.isArray(fields.Tags)
+    let tagNames = Array.isArray(fields.Tags)
       ? fields.Tags.map((t) => (typeof t === 'string' ? t : (t && t.name) ? t.name : null)).filter(Boolean)
       : [];
+    // Mood, Süre, Tarz, Bütçe kolonlarından Tatil Bulucu tag slug'larını ekle (tekrarsız)
+    const tatilBulucuSlugs = getTatilBulucuTagSlugs(fields);
+    // Yurt içi / Yurt dışı: başlık + slug'a göre otomatik etiket (ayrı script çalıştırmaya gerek yok)
+    const yurtTag = getYurtIciYurtDisiTag(fields.Name, generateSlug(fields.Name));
+    if (yurtTag) tatilBulucuSlugs.push(yurtTag);
 
     // Kategori ID'sini kullan (tablo bazlı sabit kategori)
     const categoryId = defaultCategoryId;
     console.log(`📂 Kategori ID: ${categoryId}`);
 
+    // İçeriği HTML formatına çevir (paragrafları koru)
+    let formattedContent = fields.Notes || '';
+    
+    // Çift <strong> tag'lerini düzelt
+    formattedContent = formattedContent.replace(/<strong>\s*<strong>/g, '<strong>');
+    formattedContent = formattedContent.replace(/<\/strong>\s*<\/strong>/g, '</strong>');
+    
+    // Çift satır sonlarını paragraf olarak işle
+    const paragraphs = formattedContent.split(/\n\n+/);
+    formattedContent = paragraphs
+      .map(p => p.trim())
+      .filter(p => p.length > 0)
+      .map(p => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
+      .join('\n');
+    
     const postData = {
       title: fields.Name,
       slug: generateSlug(fields.Name),
-      content: fields.Notes || '',
-      excerpt: fields.Notes ? fields.Notes.substring(0, 200) + '...' : '',
+      content: formattedContent,
+      excerpt: fields.Notes ? fields.Notes.replace(/<[^>]*>/g, '').substring(0, 200) + '...' : '',
       author_name: 'Join PR',
       author_id: joinPRUserId, // Join PR kullanıcısının ID'si
       airtable_record_id: record.id,
@@ -618,10 +733,18 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     }
 
     // Tags'i N-N ilişkiye yansıt
-    if (postId && tagNames.length > 0) {
-      const tagsRows = await upsertTagsByNames(tagNames);
-      const tagIds = (tagsRows || []).map((t) => t.id).filter(Boolean);
-      await linkTagsToPost(postId, tagIds);
+    if (postId) {
+      // 1) AirTable Tags alanından gelen tag'leri name ile upsert et
+      if (tagNames.length > 0) {
+        const tagsRows = await upsertTagsByNames(tagNames);
+        const tagIds = (tagsRows || []).map((t) => t.id).filter(Boolean);
+        await linkTagsToPost(postId, tagIds);
+      }
+      // 2) Tatil Bulucu + yurt-ici/disi slug'larını mevcut DB tag'lerinden ID ile bul ve ekle
+      if (tatilBulucuSlugs.length > 0) {
+        const slugIds = await lookupTagIdsBySlugs(tatilBulucuSlugs);
+        await linkTagsToPost(postId, slugIds);
+      }
     }
 
     // small delay to distribute write load
@@ -649,8 +772,8 @@ async function runSync() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     await syncAirtableToSupabase(AIRTABLE_BLOG_TABLE_ID, 'Blog Tablosu', 7, {
       initialDelayMs: 5000,
-      maxRecords: 10000, // Tüm "Done" kayıtları çekmek için yüksek limit
-      pageSize: 100, // Airtable API maksimum sayfa boyutu
+      maxRecords: 50, // Son 2 saatte max 50 yazı değişir
+      pageSize: 50,
       maxAttemptsPerPage: 10
     });
     console.log('\n✅ Blog tablosu sync tamamlandı!\n');
@@ -660,8 +783,8 @@ async function runSync() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     await syncAirtableToSupabase(AIRTABLE_NEWS_TABLE_ID, 'Haberler Tablosu', 13, {
       initialDelayMs: 10000,
-      maxRecords: 10000, // Tüm "Done" kayıtları çekmek için yüksek limit
-      pageSize: 100, // Airtable API maksimum sayfa boyutu
+      maxRecords: 50, // Son 2 saatte max 50 yazı değişir
+      pageSize: 50,
       maxAttemptsPerPage: 10
     });
     console.log('\n✅ Haberler tablosu sync tamamlandı!\n');
