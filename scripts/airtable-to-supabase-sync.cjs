@@ -690,9 +690,11 @@ async function syncAirtableToSupabase(tableId, tableName = 'Tablo', defaultCateg
     if (isUpdate) {
       // UPDATE modu
       console.log(`   🔄 Güncelleniyor...`);
-      
+
+      // published_at korunuyor — ilk yayın tarihi değiştirilmez
+      const { published_at, ...postDataWithoutPublishedAt } = postData;
       const updateData = {
-        ...postData,
+        ...postDataWithoutPublishedAt,
         updated_at: new Date().toISOString(),
         last_synced_at: new Date().toISOString()
       };
